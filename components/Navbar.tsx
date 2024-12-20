@@ -40,6 +40,8 @@ const items = [
 
 const Navbar = (props: Props) => {
   const { user } = useUser();
+  const primaryWeb3Wallet = user?.primaryWeb3Wallet;
+  console.log(primaryWeb3Wallet);
   const pathname = usePathname();
   return (
     <div className="w-full fixed top-0 left-0 right-0 z-20 p-4">

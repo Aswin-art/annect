@@ -7,23 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model categories {
-  id         String   @id @default(cuid())
-  name       String?  @db.VarChar(255)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  events     events[]
-}
-
 model channels {
   id          String          @id @default(cuid())
   user_id     String?         @db.VarChar(255)
-  name        String?         @db.VarChar(255)
-  description String?         @db.LongText
-  image       String?         @db.VarChar(255)
-  nik         String?         @db.VarChar(255)
-  no_rek      String?         @db.VarChar(255)
-  phone       String?         @db.VarChar(255)
+  name        String          @db.VarChar(255)
+  description String          @db.LongText
+  image       String          @db.VarChar(255)
+  email       String          @db.VarChar(255)
+  nik         String          @db.VarChar(255)
+  ktp_photo   String          @db.VarChar(255)
+  phone       String          @db.VarChar(255)
   status      channels_status @default(UNVERIFIED)
   created_at  DateTime        @default(now())
   updated_at  DateTime        @updatedAt
@@ -35,31 +28,24 @@ model channels {
 }
 
 model events {
-  id            String         @id @default(cuid())
-  channel_id    String?        @db.VarChar(255)
-  category_id   String?        @db.VarChar(255)
-  tag_id        String?        @db.VarChar(255)
-  name          String?        @db.VarChar(255)
-  description   String?        @db.LongText
-  image         String?        @db.VarChar(255)
-  tf_image      String?        @db.VarChar(255)
-  location      String?        @db.VarChar(255)
-  link_group    String         @db.VarChar(255)
-  is_paid       Boolean?       @default(false)
-  is_online     Boolean?       @default(true)
-  price         Float?
-  status        events_status? @default(PENDING)
-  post_duration Int            @default(0)
-  event_date    DateTime?      @db.DateTime(0)
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-  channels      channels?      @relation(fields: [channel_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_1")
-  categories    categories?    @relation(fields: [category_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_2")
-  tags          tags?          @relation(fields: [tag_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_3")
-  favorites     favorites[]
-  user_events   user_events[]
+  id          String        @id @default(cuid())
+  channel_id  String?       @db.VarChar(255)
+  tag_id      String?       @db.VarChar(255)
+  name        String?       @db.VarChar(255)
+  description String?       @db.LongText
+  image       String?       @db.VarChar(255)
+  location    String?       @db.VarChar(255)
+  price       Float?
+  status      events_status @default(ONGOING)
+  capacity    Int           @default(0)
+  event_date  DateTime?     @db.DateTime(0)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  channels    channels?     @relation(fields: [channel_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_1")
+  tags        tags?         @relation(fields: [tag_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_3")
+  favorites   favorites[]
+  user_events user_events[]
 
-  @@index([category_id], map: "category_id")
   @@index([channel_id], map: "channel_id")
   @@index([tag_id], map: "tag_id")
 }
@@ -102,7 +88,6 @@ model user_events {
   id         String   @id @default(cuid())
   user_id    String?  @db.VarChar(255)
   event_id   String?  @db.VarChar(255)
-  tf_image   String?  @db.VarChar(255)
   status     Boolean?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -114,17 +99,15 @@ model user_events {
 }
 
 model users {
-  id          String        @id @default(cuid())
-  name        String?       @db.VarChar(255)
-  email       String?       @db.VarChar(255)
-  image       String?       @db.VarChar(255)
-  role        users_role?
-  created_at  DateTime      @default(now())
-  updated_at  DateTime      @updatedAt
-  channels    channels[]
-  favorites   favorites[]
-  follows     follows[]
-  user_events user_events[]
+  id             String        @id @default(cuid())
+  wallet_address String        @unique @db.VarChar(255)
+  role           users_role?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  channels       channels[]
+  favorites      favorites[]
+  follows        follows[]
+  user_events    user_events[]
 }
 
 enum users_role {

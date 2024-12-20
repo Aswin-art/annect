@@ -1,20 +1,17 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import {
   Bookmark,
   Clock,
@@ -23,14 +20,12 @@ import {
   MapPin,
   Tag,
   UserRound,
+  Plus,
 } from "lucide-react";
-import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { getUserDashboardData } from "@/actions/userActions";
-import { categories, channels, events, tags, users } from "@prisma/client";
-import Loading from "@/components/Loading";
+import { channels, events, tags, users } from "@prisma/client";
 import { formatDate, formatPrice } from "@/lib/format";
 import {
   Tooltip,
@@ -48,7 +43,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import FileUpload from "@/components/FileUpload";
 import { updateUserEvent } from "@/actions/eventAction";
 
@@ -63,7 +57,6 @@ type EventType = {
   is_paid: boolean;
   link_group: string;
   tags: tags;
-  categories: categories;
   channels: channels;
 };
 
@@ -156,7 +149,10 @@ export default function Page() {
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">
             Hi, Welcome back{" "}
-            <span className="text-primary">{user?.firstName}</span> 👋
+            <span className="text-primary">
+              {user?.primaryWeb3Wallet?.web3Wallet}
+            </span>{" "}
+            👋
           </h2>
           <Link
             href={"/users/channels"}
@@ -177,9 +173,9 @@ export default function Page() {
           </div>
           <div className="mt-5">
             <div className="grid grid-cols-1 gap-5">
-              {dashboard?.user_events?.map((item, index) => (
+              {dashboard?.user_events?.map((item) => (
                 <Card
-                  key={index}
+                  key={item.id}
                   className="hover:-translate-y-3 hover:border-primary transition-all duration-300"
                 >
                   <div className="flex flex-col lg:flex-row gap-4 p-2">
@@ -212,12 +208,6 @@ export default function Page() {
                         </Link>
                       </CardDescription>
                       <div className="flex gap-4">
-                        <div className="flex gap-1 items-center text-muted-foreground">
-                          <UserRound className="w-4 h-4" />
-                          <p className="text-xs">
-                            {item.events.categories.name}
-                          </p>
-                        </div>
                         <div className="flex gap-1 items-center text-muted-foreground">
                           <LayoutGrid className="w-4 h-4" />
                           <p className="text-xs">{item.events.tags.name}</p>
@@ -333,9 +323,9 @@ export default function Page() {
           </div>
           <div className="mt-5">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              {dashboard?.follows?.map((item, index) => (
+              {dashboard?.follows?.map((item) => (
                 <Card
-                  key={index}
+                  key={item.id}
                   className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
                 >
                   <CardHeader>
@@ -354,7 +344,7 @@ export default function Page() {
                         <p className="text-xs text-muted-foreground">
                           Created by{" "}
                           <span className="text-primary">
-                            {item.channels.users.name}
+                            {item.channels.users.wallet_address}
                           </span>
                         </p>
                         <p className="text-xs text-muted-foreground">|</p>
@@ -431,9 +421,9 @@ export default function Page() {
           </div>
           <div className="mt-5">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              {dashboard?.favorites?.map((item, index) => (
+              {dashboard?.favorites?.map((item) => (
                 <Card
-                  key={index}
+                  key={item.id}
                   className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
                 >
                   <div className="relative w-full h-[300px]">
@@ -451,12 +441,6 @@ export default function Page() {
                   <CardHeader>
                     <div className="flex flex-col gap-4 mb-5">
                       <div className="flex gap-2">
-                        <div className="flex gap-1 items-center text-muted-foreground">
-                          <UserRound className="w-4 h-4" />
-                          <p className="text-xs">
-                            {item.events.categories.name}
-                          </p>
-                        </div>
                         <div className="flex gap-1 items-center text-muted-foreground">
                           <LayoutGrid className="w-4 h-4" />
                           <p className="text-xs">{item.events.tags.name}</p>

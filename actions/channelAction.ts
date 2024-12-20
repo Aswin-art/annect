@@ -155,10 +155,10 @@ export const channelVerification = async (channel_id: string) => {
         return null;
       }
 
-      await sendChannelValidatedEmail(
-        channel.users?.email || "",
-        channel.users?.name
-      );
+      // await sendChannelValidatedEmail(
+      //   channel.users?.email || "",
+      //   channel.users?.name
+      // );
       return true;
     }
 

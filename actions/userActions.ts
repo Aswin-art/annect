@@ -1,28 +1,24 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { sendWelcomeEmail } from "@/lib/mail";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { users_role } from "@prisma/client";
-import { redirect } from "next/navigation";
 
-type UserData = {
+const insertUser = async ({
+  id,
+  wallet_address,
+  role,
+}: {
   id: string;
-  name: string | null;
-  email: string;
-  image: string;
-  role: users_role | undefined;
-};
-
-const insertUser = async ({ id, name, email, image, role }: UserData) => {
+  wallet_address: string;
+  role: users_role;
+}) => {
   try {
     await db.users.create({
       data: {
         id,
-        email,
-        name,
+        wallet_address,
         role,
-        image,
       },
     });
   } catch (err) {
@@ -32,24 +28,20 @@ const insertUser = async ({ id, name, email, image, role }: UserData) => {
 
 export const checkUser = async () => {
   const user = await currentUser();
+  const wallet = user?.primaryWeb3Wallet?.web3Wallet;
 
-  if (!user) return null;
+  if (!user || !wallet) return null;
 
   const getUserFromDB = await db.users.findUnique({
     where: {
-      id: user.id,
+      wallet_address: wallet,
     },
   });
 
   if (!getUserFromDB) {
     let role: users_role = "USER";
 
-    if (
-      user.emailAddresses &&
-      user.emailAddresses.length > 0 &&
-      user.emailAddresses[0].emailAddress ===
-        "22081010099@student.upnjatim.ac.id"
-    ) {
+    if (user.id === "user_2qQVAqjws7Wzaaxxgif1KXia8x8") {
       role = "ADMIN";
     }
 
@@ -59,19 +51,17 @@ export const checkUser = async () => {
       },
     });
 
-    const data: UserData = {
+    const data = {
       id: user.id,
-      name: user.fullName,
-      email: user.emailAddresses[0]?.emailAddress,
-      image: user.imageUrl,
+      wallet_address: wallet,
       role,
     };
 
     await insertUser(data);
 
-    if (data.role == "USER") {
-      const mails = await sendWelcomeEmail(data.email, data.name);
-    }
+    // if (data.role == "USER") {
+    //   await sendWelcomeEmail(data.email, data.name);
+    // }
   }
 
   return user;

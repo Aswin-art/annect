@@ -173,9 +173,9 @@ export default function Page() {
                     </TabsList>
                     <TabsContent value="events" className="space-y-4">
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        {channels?.events?.map((event, index: number) => (
+                        {channels?.events?.map((event) => (
                           <Card
-                            key={index}
+                            key={event.id}
                             className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
                           >
                             <div className="relative w-full h-[300px]">

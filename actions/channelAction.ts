@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { sendChannelCreatedEmail, sendChannelValidatedEmail } from "@/lib/mail";
+import { createEvent } from "@/lib/web3";
 import { currentUser } from "@clerk/nextjs/server";
 
 export const getAllData = async () => {
@@ -48,6 +49,10 @@ type createValue = {
   name: string;
   description: string;
   image: string;
+  email: string;
+  nik: number;
+  ktp_photo: string;
+  phone: string;
   user_id?: string;
 };
 
@@ -69,11 +74,12 @@ export const createChannels = async (values: createValue) => {
         }
       );
 
-      if (req.ok) {
-        await sendChannelCreatedEmail(
-          user?.emailAddresses[0].emailAddress,
-          user?.firstName
-        );
+      // const res = await req.text();
+      // console.log(res);
+
+      const res = await req.json();
+
+      if (res) {
         return true;
       }
 

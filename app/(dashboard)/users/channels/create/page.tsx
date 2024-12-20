@@ -44,11 +44,14 @@ const formSchema = z.object({
   image: z.string().min(2, {
     message: "Image must be exists.",
   }),
-  nik: z.string().min(2, {
+  email: z.string().min(2, {
+    message: "Email must be exists.",
+  }),
+  nik: z.coerce.number({
     message: "NIK must be exists.",
   }),
-  no_rek: z.string().min(2, {
-    message: "No. Rek must be exists.",
+  ktp_photo: z.string().min(2, {
+    message: "KTP Photo must be exists.",
   }),
   phone: z.string().min(2, {
     message: "Phone must be exists.",
@@ -90,36 +93,68 @@ export default function Page() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Background Channel</FormLabel>
-                  <FormControl>
-                    <FileUpload
-                      apiEndpoint="image"
-                      onChange={field.onChange}
-                      value={field.value}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nama Channel</FormLabel>
-                  <FormControl>
-                    <Input disabled={isLoading} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Background Channel</FormLabel>
+                    <FormControl>
+                      <FileUpload
+                        apiEndpoint="image"
+                        onChange={field.onChange}
+                        value={field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="ktp_photo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>KTP Photo</FormLabel>
+                    <FormControl>
+                      <FileUpload
+                        apiEndpoint="image"
+                        onChange={field.onChange}
+                        value={field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama Channel</FormLabel>
+                    <FormControl>
+                      <Input disabled={isLoading} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Penyelenggara</FormLabel>
+                    <FormControl>
+                      <Input disabled={isLoading} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="description"
@@ -137,7 +172,7 @@ export default function Page() {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="nik"
@@ -145,33 +180,18 @@ export default function Page() {
                   <FormItem>
                     <FormLabel>NIK (Nomor Induk Kewarganegaran)</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} {...field} />
+                      <Input disabled={isLoading} type="number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="no_rek"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>No. Rekening</FormLabel>
-                    <FormControl>
-                      <Input disabled={isLoading} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nomor Telepon</FormLabel>
+                    <FormLabel>Phone Number</FormLabel>
                     <FormControl>
                       <Input disabled={isLoading} {...field} />
                     </FormControl>

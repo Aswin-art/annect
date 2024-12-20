@@ -1,10 +1,11 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useCallback, useState } from "react";
 import { useTheme } from "next-themes";
 
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
+import { PartialBlock } from "@blocknote/core";
 
 type Props = {
   onChange: (value?: string) => void;
@@ -12,7 +13,10 @@ type Props = {
 };
 
 const EditableEditor = ({ onChange, value }: Props) => {
-  const editor = useCreateBlockNote();
+  const [content, setContent] = useState<PartialBlock[]>();
+  const editor = useCreateBlockNote({
+    initialContent: content,
+  });
 
   const { theme } = useTheme();
   const blockNoteTheme =
@@ -28,24 +32,18 @@ const EditableEditor = ({ onChange, value }: Props) => {
     onChange(html);
   };
 
-  const handleConvertHtmlToBlock = async () => {
+  useCallback(async () => {
     const blocks = await editor.tryParseHTMLToBlocks(value ?? "");
-    editor.replaceBlocks(editor.document, blocks);
-  };
-
-  if (value) {
-    handleConvertHtmlToBlock();
-  }
+    setContent(blocks);
+  }, [editor, value]);
 
   return (
-    <div className="-mx-[40px]">
-      <BlockNoteView
-        editor={editor}
-        theme={blockNoteTheme}
-        editable={true}
-        onChange={handleChange}
-      />
-    </div>
+    <BlockNoteView
+      editor={editor}
+      theme={blockNoteTheme}
+      onChange={handleChange}
+      editable={true}
+    />
   );
 };
 

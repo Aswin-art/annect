@@ -262,11 +262,11 @@ export default function Page() {
                                 </Link>
                                 <Link
                                   href={
-                                    "/users/channels/events/update/" + event.id
+                                    "/events/" + event.id
                                   }
                                 >
                                   <Button variant={"default"}>
-                                    Edit Event
+                                    Detail Event
                                   </Button>
                                 </Link>
                               </div>

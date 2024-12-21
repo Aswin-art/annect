@@ -89,6 +89,7 @@ model user_events {
   user_id    String?  @db.VarChar(255)
   event_id   String?  @db.VarChar(255)
   status     Boolean?
+  qty        Int      
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   users      users?   @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_1")

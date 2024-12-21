@@ -63,6 +63,7 @@ export default function Page() {
   const [paymentImage, setPaymentImage] = useState<string | undefined>("");
   const getData = async () => {
     const req = await getChannelByUserId();
+    console.log("req from page", req);
     setChannels(req);
     setLoading(false);
   };
@@ -251,12 +252,12 @@ export default function Page() {
                             </CardHeader>
                             <CardFooter>
                               <div className="ms-auto flex gap-2">
-                                <Link href={"/events/" + event.id}>
+                                <Link href={"/users/channels/events/dashboard/" + event.id}>
                                   <Button
                                     variant={"secondary"}
                                     className="hover:text-primary transition-all duration-300"
                                   >
-                                    Lihat detail
+                                    Dashboard Analytic
                                   </Button>
                                 </Link>
                                 <Link

@@ -71,11 +71,13 @@ export default function Page() {
   const params = useParams();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
 
   const getChannelData = async () => {
     const req = await getChannelById(params.id as string);
 
     if (req) {
+      setIsVerified(req.status);
       form.reset(req);
     }
   };
@@ -88,13 +90,57 @@ export default function Page() {
       }
 
       const provider = new ethers.BrowserProvider(window.ethereum);
-
       const network = await provider.getNetwork();
+
       if (network.chainId !== DEFAULT_CHAIN_ID) {
-        alert(`Silakan pindah ke jaringan Holesky`);
-        throw new Error(
-          `Jaringan yang aktif adalah Chain ID: ${network.chainId}, bukan ${DEFAULT_CHAIN_ID}.`
-        );
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: ethers.toQuantity(DEFAULT_CHAIN_ID) }],
+          });
+        } catch (switchError: unknown) {
+          if (isSwitchError(switchError)) {
+            if (switchError.code === 4902) {
+              try {
+                await window.ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [
+                    {
+                      chainId: ethers.toQuantity(DEFAULT_CHAIN_ID),
+                      chainName: "Holesky Testnet",
+                      nativeCurrency: {
+                        name: "Ethereum",
+                        symbol: "ETH",
+                        decimals: 18,
+                      },
+                      rpcUrls: ["https://rpc.holesky.io"],
+                      blockExplorerUrls: ["https://explorer.holesky.io"],
+                    },
+                  ],
+                });
+              } catch (addError) {
+                console.error("Gagal menambahkan jaringan Holesky:", addError);
+                alert(
+                  "Gagal menambahkan jaringan Holesky. Ganti jaringan secara manual."
+                );
+                return null;
+              }
+            } else {
+              console.error("Gagal mengganti jaringan:", switchError);
+              alert("Gagal mengganti jaringan. Ganti jaringan secara manual.");
+              return null;
+            }
+          } else {
+            console.error(
+              "Error tidak diketahui saat mengganti jaringan:",
+              switchError
+            );
+            alert(
+              "Terjadi error yang tidak diketahui. Ganti jaringan secara manual."
+            );
+            return null;
+          }
+        }
       }
 
       const accounts = await provider.listAccounts();
@@ -112,7 +158,16 @@ export default function Page() {
     }
   };
 
+  function isSwitchError(error: unknown): error is { code: number } {
+    return typeof error === "object" && error !== null && "code" in error;
+  }
+
   const verifiedChannel = async () => {
+    if (isVerified) {
+      toast.error("Channel sudah terverifikasi!");
+      return false;
+    }
+
     setIsLoading(true);
     const webThree = await getWebThree();
 
@@ -126,8 +181,15 @@ export default function Page() {
       const req = await channelVerification(params.id as string);
 
       if (req) {
-        webThree.contract.addWhitelistedCreator(req.users?.wallet_address);
-        toast.success("Success to verified!");
+        const web = await webThree.contract.addWhitelistedCreator(
+          "0xe77Cf1A027d7C10Ee6bb7Ede5E922a181FF40E8f"
+        );
+
+        if (web.data) {
+          console.log("web3", web);
+          router.push("/admin/channels");
+          toast.success("Success to verified!");
+        }
       }
     } catch (err) {
       console.log(err);
@@ -154,127 +216,131 @@ export default function Page() {
         </div>
         <Separator />
 
-        <Form {...form}>
-          <form onSubmit={() => console.log("keren")} className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {isVerified !== null && (
+          <Form {...form}>
+            <form onSubmit={() => console.log("keren")} className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Background Channel</FormLabel>
+                      <FormControl>
+                        <FileUpload
+                          apiEndpoint="image"
+                          onChange={field.onChange}
+                          value={field.value}
+                          disabled={true}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="ktp_photo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>KTP Photo</FormLabel>
+                      <FormControl>
+                        <FileUpload
+                          apiEndpoint="image"
+                          onChange={field.onChange}
+                          value={field.value}
+                          disabled={true}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nama Channel</FormLabel>
+                      <FormControl>
+                        <Input disabled={true} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Penyelenggara</FormLabel>
+                      <FormControl>
+                        <Input disabled={true} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
-                name="image"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Background Channel</FormLabel>
+                    <FormLabel>Deskripsi Channel</FormLabel>
                     <FormControl>
-                      <FileUpload
-                        apiEndpoint="image"
+                      <EditableEditor
                         onChange={field.onChange}
                         value={field.value}
-                        disabled={true}
+                        editable={false}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="ktp_photo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>KTP Photo</FormLabel>
-                    <FormControl>
-                      <FileUpload
-                        apiEndpoint="image"
-                        onChange={field.onChange}
-                        value={field.value}
-                        disabled={true}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nama Channel</FormLabel>
-                    <FormControl>
-                      <Input disabled={true} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Penyelenggara</FormLabel>
-                    <FormControl>
-                      <Input disabled={true} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Deskripsi Channel</FormLabel>
-                  <FormControl>
-                    <EditableEditor
-                      onChange={field.onChange}
-                      value={field.value}
-                      editable={false}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="nik"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>NIK (Nomor Induk Kewarganegaran)</FormLabel>
-                    <FormControl>
-                      <Input disabled={true} type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input disabled={true} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <Button
-              type="button"
-              onClick={verifiedChannel}
-              disabled={isLoading}
-            >
-              {isLoading ? "Loading..." : "Verifikasi"}
-            </Button>
-          </form>
-        </Form>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="nik"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>NIK (Nomor Induk Kewarganegaran)</FormLabel>
+                      <FormControl>
+                        <Input disabled={true} type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input disabled={true} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              {!isVerified && (
+                <Button
+                  type="button"
+                  onClick={verifiedChannel}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Loading..." : "Verifikasi"}
+                </Button>
+              )}
+            </form>
+          </Form>
+        )}
       </div>
     </ScrollArea>
   );

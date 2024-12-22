@@ -17,8 +17,8 @@ import {
 
 interface BarGraphProps {
   chartData: { date: string; count: number }[];
-  title : string;
-  desc : string;
+  title: string;
+  desc: string;
 }
 
 const chartConfig = {
@@ -37,9 +37,9 @@ export function BarGraph({ chartData, title, desc }: BarGraphProps) {
 
   const total = React.useMemo(
     () => ({
-      count: chartData.reduce((acc, curr) => acc + curr.count, 0),
+      count: chartData?.reduce((acc, curr) => acc + curr.count, 0),
     }),
-    [chartData] 
+    [chartData]
   );
 
   return (
@@ -50,14 +50,12 @@ export function BarGraph({ chartData, title, desc }: BarGraphProps) {
           <CardDescription>{desc}</CardDescription>
         </div>
         <div className="flex">
-          <button
-            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-          >
+          <button className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
             <span className="text-xs text-muted-foreground">
               {chartConfig.count.label}
             </span>
             <span className="text-lg font-bold leading-none sm:text-3xl">
-              {total.count.toLocaleString()}
+              {total.count?.toLocaleString()}
             </span>
           </button>
         </div>

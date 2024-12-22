@@ -57,11 +57,6 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           >
             <Eye className="mr-2 h-4 w-4" /> Lihat Data
           </DropdownMenuItem>
-          {data.status !== "VERIFIED" && (
-            <DropdownMenuItem onClick={() => setOpen(true)}>
-              <Edit className="mr-2 h-4 w-4" /> Verifikasi Channel
-            </DropdownMenuItem>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

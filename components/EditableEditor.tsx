@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 
 import { useCreateBlockNote } from "@blocknote/react";
@@ -41,7 +41,7 @@ const EditableEditor = ({ onChange, value, editable = true }: Props) => {
 
   useEffect(() => {
     parseData();
-  }, [value, editor]);
+  }, []);
 
   return (
     <BlockNoteView

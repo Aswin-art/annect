@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -40,9 +39,8 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
-import { categories, tags } from "@prisma/client";
+import { tags } from "@prisma/client";
 import { createEvents } from "@/actions/eventAction";
-import { Checkbox } from "@/components/ui/checkbox";
 import dynamic from "next/dynamic";
 const EditableEditor = dynamic(() => import("@/components/EditableEditor"), {
   ssr: false,
@@ -67,53 +65,33 @@ const formSchema = z.object({
   tag_id: z.string().min(2, {
     message: "tag must be exists.",
   }),
-  category_id: z.string().min(2, {
-    message: "category must be exists.",
-  }),
+  capacity: z.coerce.number().min(10),
   location: z.string(),
-  link_group: z.string().min(2, {
-    message: "link must be exists.",
-  }),
-  price: z.coerce.number().min(0),
-  post_duration: z.coerce.number().min(0),
+  price: z.coerce.number().min(10),
   event_date: z.date(),
-  is_paid: z.coerce.boolean(),
-  is_online: z.coerce.boolean(),
 });
 
 export default function Page() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      category_id: "",
       description: "",
       event_date: new Date(),
       image: "",
-      link_group: "",
       location: "",
       name: "",
       price: 0,
-      post_duration: 0,
       tag_id: "",
-      is_paid: false,
-      is_online: false,
     },
   });
 
   const [tags, setTags] = useState<tags[]>([]);
-  const [categories, setCategories] = useState<categories[]>([]);
 
   const router = useRouter();
 
   const isLoading = form.formState.isSubmitting;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (values.is_paid == false) {
-      values.price = 0;
-    }
-    if (values.is_online == true) {
-      values.location = "ONLINE";
-    }
     const create = await createEvents(values);
 
     if (create) {
@@ -138,22 +116,7 @@ export default function Page() {
       }
     };
 
-    const getCategories = async () => {
-      try {
-        const req = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/categories`
-        );
-        const res = await req.json();
-        if (res.length > 0) {
-          setCategories(res);
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-
     getTags();
-    getCategories();
   }, []);
 
   return (
@@ -188,7 +151,7 @@ export default function Page() {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -204,13 +167,10 @@ export default function Page() {
               />
               <FormField
                 control={form.control}
-                name="post_duration"
+                name="capacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Durasi Postingan{" "}
-                      <span className="text-red-500">(Rp. 1000/hari)</span>
-                    </FormLabel>
+                    <FormLabel>Tiket Tersedia</FormLabel>
                     <FormControl>
                       <Input disabled={isLoading} type="number" {...field} />
                     </FormControl>
@@ -229,28 +189,8 @@ export default function Page() {
                     <EditableEditor
                       onChange={field.onChange}
                       value={field.value}
+                      editable={true}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="is_paid"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="relative flex items-center gap-2 mt-5">
-                      <Checkbox
-                        disabled={isLoading}
-                        onCheckedChange={field.onChange}
-                        checked={field.value}
-                      />
-                      <span className="text-muted-foreground text-xs">
-                        Apakah event berbayar?
-                      </span>
-                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -264,13 +204,7 @@ export default function Page() {
                   <FormItem>
                     <FormLabel>Harga Event</FormLabel>
                     <FormControl>
-                      <Input
-                        disabled={
-                          isLoading || form.getValues("is_paid") == false
-                        }
-                        type="number"
-                        {...field}
-                      />
+                      <Input disabled={isLoading} type="number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -304,6 +238,7 @@ export default function Page() {
                           <PopoverContent className="w-auto p-0">
                             <Calendar
                               mode="single"
+                              fromDate={new Date()}
                               selected={field.value}
                               onSelect={field.onChange}
                               initialFocus
@@ -311,60 +246,6 @@ export default function Page() {
                           </PopoverContent>
                         </Popover>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="is_online"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="relative flex items-center gap-2 mt-5">
-                      <Checkbox
-                        disabled={isLoading}
-                        onCheckedChange={field.onChange}
-                        checked={field.value}
-                      />
-                      <span className="text-muted-foreground text-xs">
-                        Apakah online?
-                      </span>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lokasi Event</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={
-                          isLoading || form.getValues("is_online") == true
-                        }
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="link_group"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link Grub Event</FormLabel>
-                    <FormControl>
-                      <Input disabled={isLoading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -387,36 +268,9 @@ export default function Page() {
                           <SelectValue placeholder="Pilih Tipe" />
                         </SelectTrigger>
                         <SelectContent>
-                          {tags.map((tag, index) => (
-                            <SelectItem key={index} value={tag.id}>
+                          {tags.map((tag) => (
+                            <SelectItem key={tag.id} value={tag.id}>
                               {tag.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kategori Event</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih Kategori" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((item, index) => (
-                            <SelectItem key={index} value={item.id}>
-                              {item.name}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -172,24 +172,19 @@ type createValues = {
   description: string;
   image: string;
   tag_id: string;
-  category_id: string;
   location: string;
-  link_group: string;
   price: number;
   event_date: Date;
   channel_id?: string;
-  is_paid: boolean | null;
-  post_duration: number;
 };
 
 export const createEvents = async (values: createValues) => {
   const user = await currentUser();
-  const totalPayment = values.post_duration * 1000;
 
   if (user && user.privateMetadata.role === "USER") {
-    const getChannelId = await getSpesificChannelByUserId(user.id);
-    if (getChannelId) {
-      values.channel_id = getChannelId.id;
+    const channel = await getSpesificChannelByUserId(user.id);
+    if (channel) {
+      values.channel_id = channel.id;
       try {
         const req = await fetch(
           process.env.NEXT_PUBLIC_API_BASE_URL + "/events",
@@ -204,9 +199,8 @@ export const createEvents = async (values: createValues) => {
 
         if (req.ok) {
           await sendEventCreatedEmail(
-            user?.emailAddresses[0].emailAddress,
-            user?.firstName,
-            totalPayment
+            channel.email,
+            user?.primaryWeb3Wallet?.web3Wallet as string
           );
 
           await sendBroadcastEmail(values.channel_id);
@@ -330,7 +324,9 @@ export const updateUserEvent = async (
 
 export const getDashboardData = async () => {
   try {
-    const req = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "/dashboard");
+    const req = await fetch(
+      process.env.NEXT_PUBLIC_API_BASE_URL + "/dashboard"
+    );
 
     if (req.ok) {
       const res = await req.json();
@@ -341,4 +337,4 @@ export const getDashboardData = async () => {
     console.log(err);
     return null;
   }
-}
+};

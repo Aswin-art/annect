@@ -10,9 +10,15 @@ type Props = {
   apiEndpoint: "image";
   onChange: (url?: string) => void;
   value?: string;
+  disabled?: boolean;
 };
 
-const FileUpload = ({ apiEndpoint, onChange, value }: Props) => {
+const FileUpload = ({
+  apiEndpoint,
+  onChange,
+  value,
+  disabled = false,
+}: Props) => {
   if (value) {
     return (
       <div className="flex flex-col items-center justify-center">
@@ -25,9 +31,11 @@ const FileUpload = ({ apiEndpoint, onChange, value }: Props) => {
           />
         </div>
 
-        <Button variant={"ghost"} type="button" onClick={() => onChange("")}>
-          <X className="w-4 h-4" /> Remove
-        </Button>
+        {!disabled && (
+          <Button variant={"ghost"} type="button" onClick={() => onChange("")}>
+            <X className="w-4 h-4" /> Remove
+          </Button>
+        )}
       </div>
     );
   }

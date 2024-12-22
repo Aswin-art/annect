@@ -2,7 +2,6 @@
 
 import { db } from "@/lib/db";
 import { sendChannelCreatedEmail, sendChannelValidatedEmail } from "@/lib/mail";
-import { createEvent } from "@/lib/web3";
 import { currentUser } from "@clerk/nextjs/server";
 
 export const getAllData = async () => {
@@ -20,6 +19,38 @@ export const getAllData = async () => {
     }
   } catch (err) {
     console.log(err);
+    return null;
+  }
+};
+
+export const getAllChannelForAdmin = async () => {
+  try {
+    const req = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/channels`,
+      { cache: "no-store" }
+    );
+
+    if (req.ok) {
+      const res = await req.json();
+      return res;
+    }
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const getDetailChannelForAdmin = async (channel_id: string) => {
+  try {
+    const channel = await db.channels.findUnique({
+      where: {
+        id: channel_id,
+      },
+    });
+
+    return channel;
+  } catch (error) {
+    console.error("Error fetching event:", error);
     return null;
   }
 };
@@ -161,11 +192,12 @@ export const channelVerification = async (channel_id: string) => {
         return null;
       }
 
-      // await sendChannelValidatedEmail(
-      //   channel.users?.email || "",
-      //   channel.users?.name
-      // );
-      return true;
+      await sendChannelValidatedEmail(
+        channel.email || "",
+        channel.users.wallet_address
+      );
+
+      return channel;
     }
 
     return false;

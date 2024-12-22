@@ -25,7 +25,7 @@ export const columns: ColumnDef<channels>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "users.name",
+    accessorKey: "users.wallet_address",
     header: "CREATED BY",
   },
   {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 
 import { useCreateBlockNote } from "@blocknote/react";
@@ -10,9 +10,10 @@ import { PartialBlock } from "@blocknote/core";
 type Props = {
   onChange: (value?: string) => void;
   value?: string;
+  editable?: boolean;
 };
 
-const EditableEditor = ({ onChange, value }: Props) => {
+const EditableEditor = ({ onChange, value, editable = true }: Props) => {
   const [content, setContent] = useState<PartialBlock[]>();
   const editor = useCreateBlockNote({
     initialContent: content,
@@ -32,17 +33,22 @@ const EditableEditor = ({ onChange, value }: Props) => {
     onChange(html);
   };
 
-  useCallback(async () => {
+  const parseData = async () => {
     const blocks = await editor.tryParseHTMLToBlocks(value ?? "");
+    editor.replaceBlocks(editor.document, blocks);
     setContent(blocks);
-  }, [editor, value]);
+  };
+
+  useEffect(() => {
+    parseData();
+  }, [value, editor]);
 
   return (
     <BlockNoteView
       editor={editor}
       theme={blockNoteTheme}
       onChange={handleChange}
-      editable={true}
+      editable={editable}
     />
   );
 };

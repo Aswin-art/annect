@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import ABI from "@/constants/abi.json";
+import { currentUser } from "@clerk/nextjs/server";
 
 const DEFAULT_RPC_URL = process.env.NEXT_PUBLIC_WEB3_RPC_URL ?? "";
 const DEFAULT_ADDRESS_URL = process.env.NEXT_PUBLIC_WEB3_ADDRESS_URL ?? "";
@@ -13,6 +14,18 @@ if (!provider)
 
 const contract = new ethers.Contract(DEFAULT_ADDRESS_URL, ABI, provider);
 
+export const check = async () => {
+  const user = await currentUser();
+
+  if (!user?.primaryWeb3Wallet) return;
+  try {
+    const signer = await provider.getSigner();
+    console.log(signer);
+  } catch (err) {
+    console.error("Error yak:", err);
+  }
+};
+
 if (!contract) throw new Error("Contract is not defined.");
 
 const dateToWei = (date: Date): string => {
@@ -22,7 +35,7 @@ const dateToWei = (date: Date): string => {
 
 export const verifyWhitelist = async (address: string) => {
   const req = await contract.addWhitelistedCreator(address);
-
+  console.log(req);
   return req;
 };
 

@@ -10,7 +10,7 @@ type TransactionType = {
 };
 
 export function RecentSales({ data }: { data: TransactionType[] }) {
-  console.log("data", data);
+ 
   return (
     <div className="space-y-8">
       {data.map((item, index: number) => (

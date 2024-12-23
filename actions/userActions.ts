@@ -41,7 +41,7 @@ export const checkUser = async () => {
   if (!getUserFromDB) {
     let role: users_role = "USER";
 
-    if (user.id === "user_2qQVAqjws7Wzaaxxgif1KXia8x8") {
+    if (user.id === "user_2qVfss23Skr9LAUdH8N15JYuQmR") {
       role = "ADMIN";
     }
 

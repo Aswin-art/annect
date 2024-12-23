@@ -1,7 +1,7 @@
 "use client";
 import { getDashboardData } from "@/actions/dashboardAction";
 import { AreaGraph } from "@/components/charts/area-graph";
-import { BarGraph } from "@/components/charts/bar-graph";
+import { TransactionChart } from "@/components/charts/transaction-chart";
 import { PieGraph } from "@/components/charts/pie-graph";
 import { Overview } from "@/components/overview";
 import { RecentSales } from "@/components/recent-sales";
@@ -44,10 +44,6 @@ type DashboardData = {
 
 export default function Page({ params }: { params: { id: string } }) {
   const [dashboardData, setDashboard] = useState<DashboardData>();
-  const [eventName, setEvent] = useState<string>("");
-  const [eventData, setEventData] = useState(null);
-  const [lastTransaction, setLastTransaction] = useState<TransactionType[]>();
-  const [income, setIncome] = useState<number>(0);
   const [chartData, setChartData] = useState<{ date: string; count: number }[]>(
     []
   );
@@ -61,18 +57,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const response = await fetch(`/api/events/dashboard/${params.id}`);
     if (response.ok) {
       const data = await response.json();
-      console.log("data from api ", data.data);
       setDashboard(data.data);
-      // const chartData = data.groupedUserEvents.map(
-      //   (item: { date: string; count: number }) => ({
-      //     date: item.date,
-      //     count: item.count,
-      //   })
-      // );
-      // setChartData(chartData);
-      // setIncome(data.totalIncome);
-      // setEvent(data.eventName);
-      // setLastTransaction(data.lastUserTrx);
     }
   };
 
@@ -159,31 +144,12 @@ export default function Page({ params }: { params: { id: string } }) {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="col-span-12">
-                <BarGraph
-                  chartData={dashboardData?.totalEvent || []}
+                <TransactionChart
+                  chartData={dashboardData?.totalEvent   || []}
                   title="Bar chart transaksi user"
                   desc="list user transaction"
                 />
               </div>
-              {/* <Card className="col-span-4 md:col-span-3">
-                <CardHeader>
-                  <CardTitle>Last Transaction</CardTitle>
-                  <CardDescription>
-                    Ada sebanyak 10 transaksi di bulan ini.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {dashboard?.transaction && (
-                    <RecentSales data={dashboard.transaction} />
-                  )}
-                </CardContent>
-              </Card> */}
-              {/* <div className="col-span-4">
-                <AreaGraph />
-              </div>
-              <div className="col-span-4 md:col-span-3">
-                <PieGraph />
-              </div> */}
             </div>
           </TabsContent>
         </Tabs>

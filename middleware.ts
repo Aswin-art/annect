@@ -21,7 +21,7 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   if (
-    auth().userId === "user_2qQVAqjws7Wzaaxxgif1KXia8x8" &&
+    auth().userId === "user_2qUO9rjN8PXNiFEzqbAOvVQHtKf" &&
     isUserDashboardRoute(req)
   ) {
     return NextResponse.redirect(new URL("/admin", url));

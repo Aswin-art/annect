@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
 import { ThemeProvider } from "@/components/theme-provider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "react-hot-toast";
+import  Statcounter from "@/components/Statcounter";
+// import { GoogleAnalytics } from "nextjs-google-analytics";
 
 export const metadata: Metadata = {
   title: "Annect",
@@ -40,6 +41,8 @@ export default function RootLayout({
           />
         </head>
         <body>
+          {/* <GoogleAnalytics trackPageViews /> */}
+          <Statcounter/>
           <NextTopLoader color="#1e40af" />
           <Toaster position="top-center" />
           <ThemeProvider attribute="class" disableTransitionOnChange>

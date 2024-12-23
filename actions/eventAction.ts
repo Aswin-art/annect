@@ -36,6 +36,25 @@ export const getAllData = async (
   }
 };
 
+export const getAllEvent = async (
+    nameParams?: string | null,
+    tagParams?: string | null,
+    categoryParams?: string | null,
+    priceParams?: string | null
+) => {
+  try {
+    const user = await currentUser();
+    const getEvents = await fetch(
+        process.env.NEXT_PUBLIC_API_BASE_URL +
+        `/events?users=${user?.id}&name=${nameParams}&tags=${tagParams}&categories=${categoryParams}&prices=${priceParams}`
+    );
+    const eventRes = await getEvents.json();
+    return eventRes.slice(0, 4);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 export const getAllDataAdmin = async () => {
   const user = await currentUser();
 

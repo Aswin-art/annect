@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import { ModeToggle } from "./ModeToggle";
 import Link from "next/link";
 import Wrapper from "./Wrapper";
@@ -22,7 +22,6 @@ import {
 import { Button } from "./ui/button";
 
 type Props = {};
-
 const items = [
   {
     name: "Beranda",
@@ -40,31 +39,31 @@ const items = [
 
 const Navbar = (props: Props) => {
   const { user } = useUser();
-  const primaryWeb3Wallet = user?.primaryWeb3Wallet;
   const pathname = usePathname();
+
   return (
     <div className="w-full fixed top-0 left-0 right-0 z-20 p-4">
       <Wrapper>
-        <div className="flex justify-between items-center gap-4 rounded-xl p-4 border bg-background border-input">
+        <div className={`flex justify-between items-center gap-4 rounded-xl p-4 border border-input bg-background`}>
           <aside className="flex gap-2 items-center">
             <Image
-              src={"/logo.svg"}
+              src={"/festiva/logo.png"}
               draggable={false}
               alt="logo"
               width={30}
               height={30}
             />
             <Link href={"/"} className="font-bold text-xl">
-              Annect
+              BlockTix
             </Link>
           </aside>
-          <nav className="gap-4 hidden lg:flex flex-grow justify-center items-center">
+          <nav className="gap-4 hidden lg:flex flex-grow justify-center items-center gap-10">
             {items.map((nav) => (
               <Link
                 href={nav.url}
                 key={nav.name}
-                className={clsx("hover:text-blue-600 transition-all", {
-                  "text-blue-600 font-semibold": pathname === nav.url,
+                className={clsx("hover:text-primary transition-all font-semibold font-BlockTix", {
+                  "text-primary font-semibold": pathname === nav.url,
                 })}
               >
                 {nav.name}
@@ -77,7 +76,9 @@ const Navbar = (props: Props) => {
                 href={"/users"}
                 className="border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md px-4 py-2 flex justify-center items-center"
               >
-                Get Started
+                {
+                    user ? "Dashboard" : "Login"
+                }
                 <ChevronRight />
               </Link>
               <UserButton
@@ -161,7 +162,7 @@ const Navbar = (props: Props) => {
                   </nav>
                   <SheetFooter>
                     <SheetDescription>
-                      &copy; 2024 Annect | All rights reserved
+                      &copy; 2024 BlockTix | All rights reserved
                     </SheetDescription>
                   </SheetFooter>
                 </SheetContent>

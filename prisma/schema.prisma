@@ -90,11 +90,11 @@ model user_events {
   user_id    String?  @db.VarChar(255)
   event_id   String?  @db.VarChar(255)
   status     Boolean?
-  qty        Int      
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  users      users?   @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_1")
-  events     events?  @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_2")
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  tickets    tickets[]
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_1")
+  events     events?   @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_2")
 
   @@index([event_id], map: "event_id")
   @@index([user_id], map: "user_id")

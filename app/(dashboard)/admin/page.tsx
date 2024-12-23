@@ -19,6 +19,7 @@ import { formatPrice } from "@/lib/format";
 import { events, users } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { BarGraph } from "@/components/charts/bar-graph";
+import axios from "axios";
 import { ethers } from "ethers";
 import ABI from "@/constants/abi.json";
 import toast from "react-hot-toast";

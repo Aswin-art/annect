@@ -63,31 +63,21 @@ const formSchema = z.object({
   tag_id: z.string().min(2, {
     message: "tag must be exists.",
   }),
-  // category_id: z.string().min(2, {
-  //     message: "category must be exists.",
-  // }),
   location: z.string().min(2, {
     message: "location must be exists.",
   }),
-  // link_group: z.string().min(2, {
-  //     message: "link must be exists.",
-  // }),
   price: z.coerce.number().min(0),
   event_date: z.date(),
-  //   is_paid: z.coerce.boolean(),
+  capacity: z.coerce.number().min(0),
 });
 
 export default function Page({ params }: { params: { id: string } }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
-
   const [tags, setTags] = useState<tags[]>([]);
-  // const [categories, setCategories] = useState<categories[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
   const router = useRouter();
-
   const isLoading = form.formState.isSubmitting;
 
   const createHandler = async (values: z.infer<typeof formSchema>) => {
@@ -120,17 +110,16 @@ export default function Page({ params }: { params: { id: string } }) {
 
   const getData = async () => {
     const req = await getEventById(params.id);
+    console.log("req", req);
     if (req) {
       form.setValue("name", req?.name);
-      //   form.setValue("is_paid", req?.is_paid);
       form.setValue("image", req?.image);
       form.setValue("description", req?.description);
       form.setValue("price", req?.price);
       form.setValue("event_date", req?.event_date);
       form.setValue("location", req?.location);
-      // form.setValue("link_group", req?.link_group);
       form.setValue("tag_id", req?.tag_id);
-      //   form.setValue("category_id", req?.category_id);
+      form.setValue("capacity", req?.capacity);
       setLoading(false);
     }
   };
@@ -222,27 +211,6 @@ export default function Page({ params }: { params: { id: string } }) {
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name="is_paid"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative flex items-center gap-2 mt-5">
-                        <Checkbox
-                          disabled={isLoading}
-                          onCheckedChange={field.onChange}
-                          checked={field.value}
-                        />
-                        <span className="text-muted-foreground text-xs">
-                          Apakah event berbayar?
-                        </span>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -326,34 +294,34 @@ export default function Page({ params }: { params: { id: string } }) {
                     </FormItem>
                   )}
                 />
-                {/* <FormField
-                                    control={form.control}
-                                    name="category_id"
-                                    render={({field}) => (
-                                        <FormItem>
-                                            <FormLabel>Kategori Event</FormLabel>
-                                            <FormControl>
-                                                <Select
-                                                    onValueChange={field.onChange}
-                                                    defaultValue={field.value}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Pilih Kategori"/>
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem key={0} value="umum">
-                                                            Umum
-                                                        </SelectItem>
-                                                        <SelectItem key={1} value="mahasiswa">
-                                                            Mahasiswa
-                                                        </SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage/>
-                                        </FormItem>
-                                    )}
-                                /> */}
+                <FormField
+                  control={form.control}
+                  name="capacity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Capacity</FormLabel>
+                      <FormControl>
+                        <Input disabled={isLoading} type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input disabled={isLoading} type="text" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
               <Separator className="mt-5" />
               <div className="flex gap-2">

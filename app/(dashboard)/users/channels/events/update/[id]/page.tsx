@@ -225,23 +225,24 @@ export default function Page({ params }: { params: { id: string } }) {
 
       const data = {
         _eventID: 0,
-        _newDate : weiTimestamp,
+        _newDate: weiTimestamp,
         _newPriceUSD: values.price,
-        _newCapacity: values.capacity
+        _newCapacity: values.capacity,
       };
-      const web = await webThree.contract.editEvent(
-        data._eventID,
-        data._newDate,
-        data._newPriceUSD,
-        data._newCapacity
-      );
 
-      console.log("web", web);
-      if (!web.data) {
-        console.log("error web data")
-        toast.error("Error to create contract!");
-        return false;
-      }
+      // const web = await webThree.contract.editEvent(
+      //   data._eventID,
+      //   data._newDate,
+      //   data._newPriceUSD,
+      //   data._newCapacity
+      // );
+
+      // console.log("web", web);
+      // if (!web.data) {
+      //   console.log("error web data")
+      //   toast.error("Error to create contract!");
+      //   return false;
+      // }
 
       await createHandler(values);
     } catch (err) {
@@ -256,6 +257,37 @@ export default function Page({ params }: { params: { id: string } }) {
       return false;
     }
   };
+
+  const handleCancel = async () => {
+    const webThree = await getWebThree();
+    if (!webThree) {
+      toast.error("Error connecting to wallet!");
+      return false;
+    }
+
+    try {
+      const data = {
+        _eventId: 0,
+      };
+
+      const web = await webThree.contract.cancelEvent(data._eventId);
+      if (!web.data) {
+        toast.error("Error to create contract!");
+        return false; 
+      }
+      toast.success("Success!");
+    } catch (err) {
+      console.log(err);
+      if (err instanceof Error) {
+        if ("reason" in err) {
+          toast.error((err as any).reason);
+          return false;
+        }
+      }
+      toast.error("Error network!");
+      return false;
+    }
+  }
 
   useEffect(() => {
     const getTags = async () => {
@@ -452,6 +484,11 @@ export default function Page({ params }: { params: { id: string } }) {
                   )}
                 />
               </div>
+              <div className="">
+                  <Button type="submit" variant={`destructive`} disabled={isLoading}>
+                    Cancel Event
+                  </Button>
+              </div>
               <Separator className="mt-5" />
               <div className="flex gap-2">
                 <Link
@@ -465,7 +502,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 >
                   Kembali
                 </Link>
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading} onClick={handleCancel}>
                   {isLoading ? "Loading..." : "Submit"}
                 </Button>
               </div>

@@ -223,10 +223,9 @@ export default function Page() {
       }
 
       const create = await createEvents(values);
-
+     
       if (create) {
         toast.success("Success!");
-
         router.push("/users/channels");
       } else {
         toast.error("Failed!");

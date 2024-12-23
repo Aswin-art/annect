@@ -4,25 +4,17 @@ import Image from "next/image";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bookmark, CornerUpRight, GraduationCap } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { getEventById } from "@/actions/eventAction";
 import { channels, events } from "@prisma/client";
 import { formatDate, formatPrice } from "@/lib/format";
 import FallbackLoading from "@/components/Loading";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
-import { joinEvent } from "@/actions/userEventAction";
 import {
   Dialog,
   DialogContent,
@@ -69,6 +61,7 @@ type EventType = {
 export default function Page({ params }: { params: { id: string } }) {
   const [events, setEvents] = useState<EventType>();
   const [amountTicket, setAmountTicket] = useState(0);
+  const [loading, setLoading] = useState(false);
   const getEventDetail = async () => {
     const data = await getEventById(params.id);
     setEvents(data);
@@ -155,6 +148,8 @@ export default function Page({ params }: { params: { id: string } }) {
   }
 
   const handlebuyTicket = async () => {
+    setLoading(true);
+
     if (amountTicket <= 0) {
       toast.error("Ticket harus minimal 1");
       return false;
@@ -173,45 +168,26 @@ export default function Page({ params }: { params: { id: string } }) {
     }
 
     const eventDetails = await webThree.contract.events(0);
-    const ticketPrice = eventDetails.priceETHWei;
-    const totalCost = BigInt(ticketPrice) * ticketPrice;
-
-    // Validasi saldo user
-    const userAddress = (await webThree.provider.getSigner()).address;
-    const userBalance = BigInt(await webThree.provider.getBalance(userAddress));
-    if (userBalance < totalCost) {
-      toast.error("Saldo ETH tidak mencukupi!");
-      return false;
-    }
+    let ticketPrice = eventDetails.priceETHWei;
 
     try {
       for (let i = 0; i < amountTicket; i++) {
-        const web = await webThree.contract.buyTicketWithETH(0, {
-          value: 0.01,
+        const tx = await webThree.contract.buyTicketWithETH(0, {
+          value: ticketPrice,
         });
-
-        if (!web) {
-          return false;
-        }
-
-        console.log(`Ticket ${i + 1} purchased successfully.`);
+        await tx.wait();
       }
-
-      const req = await joinEvent(events.id);
-
-      if (req) {
-        const ticket = await buyTicket(Number(events.id), req.id, amountTicket);
-
-        if (ticket) {
-          toast.success("Success buy ticket!");
-        }
-      } else {
-        toast.error("Gagal mengikuti!");
+      const ticket = await buyTicket(amountTicket, Number(events.id));
+      if (ticket) {
+        toast.success("Success buy ticket!");
+        window.location.reload();
       }
     } catch (err) {
       console.log(err);
       toast.error("Failed to buy ticket!");
     }
+
+    setLoading(false);
   };
 
   const handleFavorite = async () => {
@@ -299,7 +275,9 @@ export default function Page({ params }: { params: { id: string } }) {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button onClick={handlebuyTicket}>Save changes</Button>
+                        <Button onClick={handlebuyTicket} disabled={loading}>
+                          {loading ? "loading..." : "Save changes"}
+                        </Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>

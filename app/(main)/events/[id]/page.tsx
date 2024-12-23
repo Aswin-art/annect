@@ -171,12 +171,10 @@ export default function Page({ params }: { params: { id: string } }) {
     let ticketPrice = eventDetails.priceETHWei;
 
     try {
-      for (let i = 0; i < amountTicket; i++) {
-        const tx = await webThree.contract.buyTicketWithETH(0, {
-          value: ticketPrice,
-        });
-        await tx.wait();
-      }
+      await webThree.contract.buyTicketWithETH(0, amountTicket, {
+        value: ticketPrice,
+      });
+
       const ticket = await buyTicket(amountTicket, Number(events.id));
       if (ticket) {
         toast.success("Success buy ticket!");

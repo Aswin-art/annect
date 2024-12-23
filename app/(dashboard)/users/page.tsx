@@ -175,7 +175,7 @@ export default function Page() {
                   className="hover:-translate-y-3 hover:border-primary transition-all duration-300"
                 >
                   <div className="flex flex-col lg:flex-row gap-4 p-2">
-                    <div className="relative w-[300px] h-[300px]">
+                    <div className="relative w-full lg:w-[300px] h-[300px]">
                       <Image
                         src={item.events.image || ""}
                         alt="events"
@@ -244,20 +244,6 @@ export default function Page() {
                         />
                       </div>
                       <div className="mt-3 ms-auto flex gap-2">
-                        {item.status == true && (
-                          <Link
-                            href={item.events.link_group}
-                            target="_blank"
-                            className={cn(
-                              buttonVariants({
-                                className: "text-white bg-green-500",
-                              })
-                            )}
-                          >
-                            Bergabung ke grub
-                          </Link>
-                        )}
-
                         {item.status == false &&
                           new Date(item.events.event_date) < new Date() && (
                             <Button disabled>Event Selesai</Button>

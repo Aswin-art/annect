@@ -73,7 +73,7 @@ const formSchema = z.object({
   }),
   capacity: z.coerce.number().min(10),
   location: z.string(),
-  price: z.coerce.number().min(10),
+  price: z.coerce.number().min(1),
   event_date: z.coerce.date(),
 });
 
@@ -364,6 +364,19 @@ export default function Page() {
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lokasi Event</FormLabel>
+                    <FormControl>
+                      <Input disabled={isLoading} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="tag_id"

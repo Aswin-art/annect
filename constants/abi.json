@@ -77,6 +77,19 @@
         "internalType": "uint256",
         "name": "eventId",
         "type": "uint256"
+      }
+    ],
+    "name": "EventCanceled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "eventId",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -93,7 +106,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "priceUSD",
+        "name": "priceETHWei",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "priceToken",
         "type": "uint256"
       },
       {
@@ -110,37 +129,6 @@
       }
     ],
     "name": "EventCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "eventId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newDate",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newPriceUSD",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "newCapacity",
-        "type": "uint256"
-      }
-    ],
-    "name": "EventUpdated",
     "type": "event"
   },
   {
@@ -191,15 +179,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "amountPaid",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "string",
         "name": "paymentMethod",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amountPaid",
+        "type": "uint256"
       }
     ],
     "name": "TicketPurchased",
@@ -209,9 +197,9 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
-        "name": "",
+        "name": "creator",
         "type": "address"
       }
     ],
@@ -228,8 +216,11 @@
   },
   {
     "inputs": [],
-    "name": "ETH_TO_USD_RATE",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "CheckProfit",
+    "outputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -238,13 +229,6 @@
     "name": "TestwithdrawAllFunds",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "USD_DECIMALS",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -315,7 +299,8 @@
     "inputs": [
       { "internalType": "string", "name": "_name", "type": "string" },
       { "internalType": "uint256", "name": "_date", "type": "uint256" },
-      { "internalType": "uint256", "name": "_priceUSD", "type": "uint256" },
+      { "internalType": "uint256", "name": "_priceETHWei", "type": "uint256" },
+      { "internalType": "uint256", "name": "_priceToken", "type": "uint256" },
       { "internalType": "uint256", "name": "_capacity", "type": "uint256" }
     ],
     "name": "createEvent",
@@ -327,7 +312,16 @@
     "inputs": [
       { "internalType": "uint256", "name": "_eventId", "type": "uint256" },
       { "internalType": "uint256", "name": "_newDate", "type": "uint256" },
-      { "internalType": "uint256", "name": "_newPriceUSD", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "_newPriceETHWei",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_newPriceToken",
+        "type": "uint256"
+      },
       { "internalType": "uint256", "name": "_newCapacity", "type": "uint256" }
     ],
     "name": "editEvent",
@@ -341,10 +335,12 @@
     "outputs": [
       { "internalType": "string", "name": "name", "type": "string" },
       { "internalType": "uint256", "name": "date", "type": "uint256" },
-      { "internalType": "uint256", "name": "priceUSD", "type": "uint256" },
+      { "internalType": "uint256", "name": "priceETHWei", "type": "uint256" },
+      { "internalType": "uint256", "name": "priceToken", "type": "uint256" },
       { "internalType": "uint256", "name": "capacity", "type": "uint256" },
-      { "internalType": "uint256", "name": "ticketsSold", "type": "uint256" },
+      { "internalType": "uint256", "name": "sold", "type": "uint256" },
       { "internalType": "bool", "name": "isActive", "type": "bool" },
+      { "internalType": "bool", "name": "isCanceled", "type": "bool" },
       { "internalType": "address", "name": "creator", "type": "address" },
       { "internalType": "uint256", "name": "balanceETH", "type": "uint256" },
       { "internalType": "uint256", "name": "balanceTokens", "type": "uint256" }
@@ -360,14 +356,20 @@
         "components": [
           { "internalType": "string", "name": "name", "type": "string" },
           { "internalType": "uint256", "name": "date", "type": "uint256" },
-          { "internalType": "uint256", "name": "priceUSD", "type": "uint256" },
-          { "internalType": "uint256", "name": "capacity", "type": "uint256" },
           {
             "internalType": "uint256",
-            "name": "ticketsSold",
+            "name": "priceETHWei",
             "type": "uint256"
           },
+          {
+            "internalType": "uint256",
+            "name": "priceToken",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "capacity", "type": "uint256" },
+          { "internalType": "uint256", "name": "sold", "type": "uint256" },
           { "internalType": "bool", "name": "isActive", "type": "bool" },
+          { "internalType": "bool", "name": "isCanceled", "type": "bool" },
           { "internalType": "address", "name": "creator", "type": "address" },
           {
             "internalType": "uint256",
@@ -380,7 +382,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct MotokoShinkai.Event[]",
+        "internalType": "struct MotokoShinkai.EventInfo[]",
         "name": "",
         "type": "tuple[]"
       }

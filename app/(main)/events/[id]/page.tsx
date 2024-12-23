@@ -34,6 +34,12 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { buyTicket } from "@/actions/ticketAction";
+import ABI from "@/constants/abi.json";
+import { ethers } from "ethers";
+
+const DEFAULT_ADDRESS_URL = process.env.NEXT_PUBLIC_WEB3_ADDRESS_URL ?? "";
+const DEFAULT_CHAIN_ID = BigInt(17000);
 
 type EventType = {
   id: string;
@@ -50,6 +56,7 @@ type EventType = {
     name: string;
     image: string;
     phone: string;
+    email: string;
   };
   similar_event?: Array<{
     id: string;
@@ -64,9 +71,88 @@ export default function Page({ params }: { params: { id: string } }) {
   const [amountTicket, setAmountTicket] = useState(0);
   const getEventDetail = async () => {
     const data = await getEventById(params.id);
-    console.log(data);
     setEvents(data);
   };
+
+  const getWebThree = async () => {
+    try {
+      if (typeof window.ethereum === "undefined") {
+        alert("Ethereum provider tidak ditemukan. Install MetaMask.");
+        return null;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+
+      if (network.chainId !== DEFAULT_CHAIN_ID) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: ethers.toQuantity(DEFAULT_CHAIN_ID) }],
+          });
+        } catch (switchError: unknown) {
+          if (isSwitchError(switchError)) {
+            if (switchError.code === 4902) {
+              try {
+                await window.ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [
+                    {
+                      chainId: ethers.toQuantity(DEFAULT_CHAIN_ID),
+                      chainName: "Holesky Testnet",
+                      nativeCurrency: {
+                        name: "Ethereum",
+                        symbol: "ETH",
+                        decimals: 18,
+                      },
+                      rpcUrls: ["https://rpc.holesky.io"],
+                      blockExplorerUrls: ["https://explorer.holesky.io"],
+                    },
+                  ],
+                });
+              } catch (addError) {
+                console.error("Gagal menambahkan jaringan Holesky:", addError);
+                alert(
+                  "Gagal menambahkan jaringan Holesky. Ganti jaringan secara manual."
+                );
+                return null;
+              }
+            } else {
+              console.error("Gagal mengganti jaringan:", switchError);
+              alert("Gagal mengganti jaringan. Ganti jaringan secara manual.");
+              return null;
+            }
+          } else {
+            console.error(
+              "Error tidak diketahui saat mengganti jaringan:",
+              switchError
+            );
+            alert(
+              "Terjadi error yang tidak diketahui. Ganti jaringan secara manual."
+            );
+            return null;
+          }
+        }
+      }
+
+      const accounts = await provider.listAccounts();
+      if (accounts.length === 0) {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+      }
+
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(DEFAULT_ADDRESS_URL, ABI, signer);
+
+      return { provider, signer, contract };
+    } catch (error) {
+      console.error("Error setting up provider, signer, or contract:", error);
+      return null;
+    }
+  };
+
+  function isSwitchError(error: unknown): error is { code: number } {
+    return typeof error === "object" && error !== null && "code" in error;
+  }
 
   const handlebuyTicket = async () => {
     if (amountTicket <= 0) {
@@ -79,13 +165,52 @@ export default function Page({ params }: { params: { id: string } }) {
       return false;
     }
 
-    const req = await joinEvent(events.id);
+    const webThree = await getWebThree();
 
-    if (req) {
-      toast.success("Berhasil mengikuti!");
-      await getEventDetail();
-    } else {
-      toast.error("Gagal mengikuti!");
+    if (!webThree) {
+      toast.error("Error connecting to wallet!");
+      return false;
+    }
+
+    const eventDetails = await webThree.contract.events(0);
+    const ticketPrice = eventDetails.priceETHWei;
+    const totalCost = BigInt(ticketPrice) * ticketPrice;
+
+    // Validasi saldo user
+    const userAddress = (await webThree.provider.getSigner()).address;
+    const userBalance = BigInt(await webThree.provider.getBalance(userAddress));
+    if (userBalance < totalCost) {
+      toast.error("Saldo ETH tidak mencukupi!");
+      return false;
+    }
+
+    try {
+      for (let i = 0; i < amountTicket; i++) {
+        const web = await webThree.contract.buyTicketWithETH(0, {
+          value: 0.01,
+        });
+
+        if (!web) {
+          return false;
+        }
+
+        console.log(`Ticket ${i + 1} purchased successfully.`);
+      }
+
+      const req = await joinEvent(events.id);
+
+      if (req) {
+        const ticket = await buyTicket(Number(events.id), req.id, amountTicket);
+
+        if (ticket) {
+          toast.success("Success buy ticket!");
+        }
+      } else {
+        toast.error("Gagal mengikuti!");
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to buy ticket!");
     }
   };
 
@@ -205,7 +330,7 @@ export default function Page({ params }: { params: { id: string } }) {
                       Harga Acara:{" "}
                       {events?.price == 0
                         ? "Gratis"
-                        : formatPrice(events?.price)}
+                        : formatPrice(events?.price, "USD")}
                     </p>
                   </TabsContent>
                   <TabsContent value="contact" className="space-y-4">
@@ -236,7 +361,9 @@ export default function Page({ params }: { params: { id: string } }) {
                           </div>
                           <div>
                             <h5>Alamat Email</h5>
-                            <p className="font-semibold">example.emaildotcom</p>
+                            <p className="font-semibold">
+                              {events.channels.email}
+                            </p>
                           </div>
                         </div>
                       </div>

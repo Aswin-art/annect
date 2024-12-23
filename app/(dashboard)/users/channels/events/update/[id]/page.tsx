@@ -245,7 +245,6 @@ export default function Page({ params }: { params: { id: string } }) {
 
       await createHandler(values);
     } catch (err) {
-      console.log("masuk")
       console.log(err);
       if (err instanceof Error) {
         if ("reason" in err) {

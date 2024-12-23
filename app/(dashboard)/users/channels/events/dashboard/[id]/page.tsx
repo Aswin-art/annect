@@ -21,7 +21,6 @@ import { events, users } from "@prisma/client";
 import Link from "next/link";
 import test from "node:test";
 import { useEffect, useState } from "react";
-import { withdrawEventFunds } from "@/lib/web3";
 
 type Tag = {
   name: string;
@@ -56,6 +55,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
   const getTicket = async () => {
     const response = await fetch(`/api/events/dashboard/${params.id}`);
+    console.log(response);
     if (response.ok) {
       const data = await response.json();
       setDashboard(data.data);

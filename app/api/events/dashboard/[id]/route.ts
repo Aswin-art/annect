@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const q = await prisma.events.findUnique({
         where: {
-            id: id
+            id: parseInt(id)
         },
         include: {
             user_events: true

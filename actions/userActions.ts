@@ -27,7 +27,12 @@ const insertUser = async ({
 };
 
 export const checkUser = async () => {
-  const user = await currentUser();
+  let user: any;
+  try {
+    user = await currentUser();
+  } catch (err) {
+    console.log(err);
+  }
   const wallet = user?.primaryWeb3Wallet?.web3Wallet;
 
   if (!user || !wallet) return null;
@@ -41,7 +46,7 @@ export const checkUser = async () => {
   if (!getUserFromDB) {
     let role: users_role = "USER";
 
-    if (user.id === "user_2qVfss23Skr9LAUdH8N15JYuQmR") {
+    if (user.id === "user1_2qQVAqjws7Wzaaxxgif1KXia8x8") {
       role = "ADMIN";
     }
 

@@ -167,12 +167,15 @@ export default function Page({ params }: { params: { id: string } }) {
       return false;
     }
 
-    const eventDetails = await webThree.contract.events(events.id);
+    const eventDetails = await webThree.contract.events(0);
     let ticketPrice = eventDetails.priceETHWei;
     const ticketPriceInETH = ethers.formatEther(ticketPrice);
     const ticketPriceAsNumber = parseFloat(ticketPriceInETH);
     const totalPrice: number = ticketPriceAsNumber * amountTicket;
-    const etherFinalPrice = ethers.parseUnits(totalPrice.toString(), 18);
+    const etherFinalPrice = ethers.parseUnits(
+      totalPrice.toFixed(5).toString(),
+      18
+    );
 
     try {
       await webThree.contract.buyTicketWithETH(0, amountTicket, {

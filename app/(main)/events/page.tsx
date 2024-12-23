@@ -109,6 +109,7 @@ export default function Page() {
 
   const handleFavorite = async (eventId: string) => {
     const result = await addFavorite(eventId);
+    console.log(result);
 
     if (result) {
       toast.success("Berhasil");
@@ -354,9 +355,7 @@ export default function Page() {
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant={"ghost"}
-                                    onClick={async () =>
-                                      await handleFavorite(event.id)
-                                    }
+                                    onClick={() => handleFavorite(event.id)}
                                     className={`hover:text-white hover:bg-primary transition-all duration-200 ${
                                       event.is_favorite
                                         ? "bg-primary text-white"

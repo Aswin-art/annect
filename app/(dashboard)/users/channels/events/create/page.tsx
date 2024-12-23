@@ -229,14 +229,13 @@ export default function Page() {
         _name: values.name,
         _date: weiTimestamp,
         _priceETHWei: priceInWei,
-        _priceUSD: values.price,
         _capacity: values.capacity,
       };
 
       const web = await webThree.contract.createEvent(
         data._name,
         data._date,
-        data._priceUSD,
+        data._priceETHWei,
         data._capacity
       );
 

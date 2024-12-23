@@ -54,6 +54,7 @@ export default function Page() {
 
   const getData = async () => {
     const channelAction = await getAllData();
+    console.log(channelAction);
     setChannels(channelAction);
     // Memastikan channel yang sudah di-follow memiliki background merah
     const followed = channelAction.filter((channel: ChannelType) =>
@@ -77,7 +78,6 @@ export default function Page() {
   const handleFollowChannels = async (channelId: string) => {
     try {
       const result = await followChannel(channelId);
-      console.log(result);
 
       if (result?.message == "success") {
         toast.success("Berhasil");

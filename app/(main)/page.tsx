@@ -33,43 +33,43 @@ export default function Home({ params }: { params: { id: string } }) {
   const tagsUp = [
     {
       id: 1,
-      jenisAcara: "Seminar",
+      jenisAcara: "Exhibition",
       deskripsi:
-        "kesempatan berharga untuk memperluas wawasan dan mendapatkan pengetahuan terkini langsung dari ahlinya.",
+          "A valuable opportunity to broaden your horizons and gain the latest knowledge directly from the experts.",
       icon: (
-        <Speech
-          width={60}
-          height={60}
-          className="group-hover:text-white transition-all duration-200 ease-in-out"
-        />
+          <Speech
+              width={60}
+              height={60}
+              className="group-hover:text-white transition-all duration-200 ease-in-out"
+          />
       ),
       bg: "#E4B94A",
     },
     {
       id: 2,
-      jenisAcara: "Lomba",
+      jenisAcara: "Bazaar",
       deskripsi:
-        "ajang untuk menunjukkan keterampilan Anda dan meraih pengakuan atas prestasi pada bidang yang Anda minati",
+          "An event to showcase your skills and gain recognition for achievements in your area of interest.",
       icon: (
-        <Trophy
-          width={60}
-          height={60}
-          className="group-hover:text-white transition-all duration-200 ease-in-out"
-        />
+          <Trophy
+              width={60}
+              height={60}
+              className="group-hover:text-white transition-all duration-200 ease-in-out"
+          />
       ),
       bg: "#45E29A",
     },
     {
       id: 3,
-      jenisAcara: "Workshop",
+      jenisAcara: "Concert",
       deskripsi:
-        "kegiatan interaktif yang melibatkan peserta untuk belajar secara langsung dengan bimbingan instruktur",
+          "An interactive activity that engages participants to learn directly with guidance from instructors.",
       icon: (
-        <Users
-          width={60}
-          height={60}
-          className="group-hover:text-white transition-all duration-200 ease-in-out"
-        />
+          <Users
+              width={60}
+              height={60}
+              className="group-hover:text-white transition-all duration-200 ease-in-out"
+          />
       ),
       bg: "#EE521E",
     },
@@ -78,33 +78,34 @@ export default function Home({ params }: { params: { id: string } }) {
   const tagsDown = [
     {
       id: 1,
-      jenisAcara: "Bootcamp",
+      jenisAcara: "Talkshow",
       deskripsi:
-        "program pelatihan intensif yang mempercepat pembelajaran praktis dan keterampilan, mempersiapkan peserta untuk sukses dalam karier dengan cepat",
+          "An intensive training program that accelerates practical learning and skills development, preparing participants for career success quickly.",
       icon: (
-        <BookCopy
-          width={60}
-          height={60}
-          className="group-hover:text-white transition-all duration-200 ease-in-out"
-        />
+          <BookCopy
+              width={60}
+              height={60}
+              className="group-hover:text-white transition-all duration-200 ease-in-out"
+          />
       ),
       bg: "#F50058",
     },
     {
       id: 2,
-      jenisAcara: "Beasiswa",
+      jenisAcara: "Workshop",
       deskripsi:
-        "peluang berharga yang memungkinkan Anda mendapatkan pendidikan tanpa beban biaya, sehingga bisa fokus pada studi dan pengembangan diri sambil membuka peluang karier yang lebih luas",
+          "A valuable opportunity that provides education without financial burdens, allowing you to focus on learning and personal growth while opening broader career possibilities.",
       icon: (
-        <GraduationCap
-          width={60}
-          height={60}
-          className="group-hover:text-white transition-all duration-200 ease-in-out"
-        />
+          <GraduationCap
+              width={60}
+              height={60}
+              className="group-hover:text-white transition-all duration-200 ease-in-out"
+          />
       ),
       bg: "#D728F4",
     },
   ];
+
 
   const getEvent = async (
       nameParams?: string | null,

@@ -1,6 +1,6 @@
 export function formatPrice(
   number: number | undefined | null,
-  currency: string
+  currency: string = "USD"
 ) {
   if (number === undefined || number === null) {
     return "IDR 0"; // Atau format lain sesuai kebutuhan

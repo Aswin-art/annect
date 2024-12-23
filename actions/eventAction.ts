@@ -11,28 +11,22 @@ import { currentUser } from "@clerk/nextjs/server";
 export const getAllData = async (
   nameParams?: string | null,
   tagParams?: string | null,
-  categoryParams?: string | null,
   priceParams?: string | null
 ) => {
   const user = await currentUser();
 
   try {
     const getTags = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "/tags");
-    const getCategories = await fetch(
-      process.env.NEXT_PUBLIC_API_BASE_URL + "/categories"
-    );
     const getEvents = await fetch(
       process.env.NEXT_PUBLIC_API_BASE_URL +
-        `/events?users=${user?.id}&name=${nameParams}&tags=${tagParams}&categories=${categoryParams}&prices=${priceParams}`
+        `/events?users=${user?.id}&name=${nameParams}&tags=${tagParams}&prices=${priceParams}`
     );
 
     const tagRes = await getTags.json();
-    const categoryRes = await getCategories.json();
     const eventRes = await getEvents.json();
 
     const data = {
       tags: tagRes,
-      categories: categoryRes,
       events: eventRes,
     };
 

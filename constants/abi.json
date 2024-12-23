@@ -228,6 +228,16 @@
   },
   {
     "inputs": [],
+    "name": "CheckProfit",
+    "outputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "ETH_TO_USD_RATE",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
@@ -305,6 +315,15 @@
     "type": "function"
   },
   {
+    "inputs": [
+      { "internalType": "uint256", "name": "_eventId", "type": "uint256" }
+    ],
+    "name": "cancelEvent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "name": "coOwners",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
@@ -347,7 +366,8 @@
       { "internalType": "bool", "name": "isActive", "type": "bool" },
       { "internalType": "address", "name": "creator", "type": "address" },
       { "internalType": "uint256", "name": "balanceETH", "type": "uint256" },
-      { "internalType": "uint256", "name": "balanceTokens", "type": "uint256" }
+      { "internalType": "uint256", "name": "balanceTokens", "type": "uint256" },
+      { "internalType": "bool", "name": "isCanceled", "type": "bool" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -378,7 +398,8 @@
             "internalType": "uint256",
             "name": "balanceTokens",
             "type": "uint256"
-          }
+          },
+          { "internalType": "bool", "name": "isCanceled", "type": "bool" }
         ],
         "internalType": "struct MotokoShinkai.Event[]",
         "name": "",
@@ -413,6 +434,15 @@
   },
   {
     "inputs": [
+      { "internalType": "uint256", "name": "_eventId", "type": "uint256" }
+    ],
+    "name": "refund",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       { "internalType": "address", "name": "_coOwner", "type": "address" }
     ],
     "name": "removeCoOwner",
@@ -441,6 +471,26 @@
     "name": "updateBlacklist",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "name": "userEthPaid",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "name": "userTokenPaid",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
     "type": "function"
   },
   {

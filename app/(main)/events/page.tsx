@@ -18,7 +18,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import CountUp from "react-countup";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { categories, tags } from "@prisma/client";
+import { tags } from "@prisma/client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,40 +57,28 @@ type EventType = {
   event_date: string;
   image: string;
   price: number;
-  is_paid: boolean;
-  is_online: boolean;
+  capacity: number;
   is_favorite: boolean;
-  categories?: {
-    id: string;
-    name: string;
-  };
   tags?: {
     id: string;
     name: string;
   };
 };
 
-const PRICE_TYPE = ["PAID", "UNPAID"];
-
 const filterSchema = z.object({
   tag_id: z.string().array().nullable(),
-  category_id: z.string().array().nullable(),
   name: z.string().nullable(),
-  is_paid: z.string().array().nullable(),
 });
 
 export default function Page() {
   const [events, setEvents] = useState<EventType[]>([]);
   const [tags, setTags] = useState<tags[]>([]);
-  const [categories, setCategories] = useState<categories[]>([]);
 
   const form = useForm<z.infer<typeof filterSchema>>({
     resolver: zodResolver(filterSchema),
     defaultValues: {
       name: "",
-      category_id: [],
       tag_id: [],
-      is_paid: [],
     },
   });
 
@@ -99,24 +87,16 @@ export default function Page() {
   const searchParams = useSearchParams();
   const nameParams = searchParams.get("name");
   const tagParams = searchParams.get("tags");
-  const categoryParams = searchParams.get("categories");
   const priceParams = searchParams.get("prices");
 
   const getData = async (
     nameParams?: string | null,
     tagParams?: string | null,
-    categoryParams?: string | null,
     priceParams?: string | null
   ) => {
-    const data = await getAllData(
-      nameParams,
-      tagParams,
-      categoryParams,
-      priceParams
-    );
+    const data = await getAllData(nameParams, tagParams, priceParams);
 
     setTags(data?.tags);
-    setCategories(data?.categories);
     setEvents(data?.events);
   };
 
@@ -139,9 +119,9 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (nameParams || tagParams || categoryParams || priceParams) {
+    if (nameParams || tagParams || priceParams) {
       form.setValue("name", nameParams);
-      getData(nameParams, tagParams, categoryParams, priceParams);
+      getData(nameParams, tagParams, priceParams);
     } else {
       getData();
     }
@@ -149,15 +129,10 @@ export default function Page() {
 
   const handleSearch = async (value: z.infer<typeof filterSchema>) => {
     const tags = value.tag_id?.join(",");
-    const prices = value.is_paid?.join(",");
-    const categories = value.category_id?.join(",");
 
-    router.push(
-      `${pathname}?name=${value.name}&tags=${tags}&categories=${categories}&prices=${prices}`,
-      {
-        scroll: false,
-      }
-    );
+    router.push(`${pathname}?name=${value.name}&tags=${tags}`, {
+      scroll: false,
+    });
   };
 
   return (
@@ -278,70 +253,6 @@ export default function Page() {
                       ))}
                     </div>
                     <div className="flex flex-col gap-4">
-                      <h5 className="font-bold text-xl mb-2">Kategori Event</h5>
-                      {categories?.map((category) => (
-                        <FormField
-                          key={category.id}
-                          control={form.control}
-                          name="category_id"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center gap-2">
-                              <FormControl>
-                                <Checkbox
-                                  value={category.id}
-                                  checked={field.value?.includes(category.id)}
-                                  onCheckedChange={(isChecked: boolean) => {
-                                    const newValue = isChecked
-                                      ? [...(field.value || []), category.id]
-                                      : (field.value || []).filter(
-                                          (id) => id !== category.id
-                                        );
-                                    field.onChange(newValue);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0">
-                                {category.name}
-                              </FormLabel>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex flex-col gap-4">
-                      <h5 className="font-bold text-xl mb-2">Harga Event</h5>
-                      {PRICE_TYPE.map((price) => (
-                        <FormField
-                          key={price}
-                          control={form.control}
-                          name="is_paid"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center gap-2">
-                              <FormControl>
-                                <Checkbox
-                                  value={price}
-                                  checked={field.value?.includes(price)}
-                                  onCheckedChange={(isChecked: boolean) => {
-                                    const newValue = isChecked
-                                      ? [...(field.value || []), price]
-                                      : (field.value || []).filter(
-                                          (id) => id !== price
-                                        );
-                                    field.onChange(newValue);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0">
-                                {price === "PAID" ? "Berbayar" : "Gratis"}
-                              </FormLabel>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex flex-col gap-4">
                       <Button
                         type="submit"
                         className="w-full h-full p-4 text-lg text-white"
@@ -381,9 +292,7 @@ export default function Page() {
                             <div className="flex gap-2">
                               <div className="flex gap-1 items-center text-muted-foreground">
                                 <UserRound className="w-4 h-4" />
-                                <p className="text-xs">
-                                  {event.categories?.name}
-                                </p>
+                                <p className="text-xs">Kategori</p>
                               </div>
                               <div className="flex gap-1 items-center text-muted-foreground">
                                 <LayoutGrid className="w-4 h-4" />
@@ -391,9 +300,7 @@ export default function Page() {
                               </div>
                               <div className="flex gap-1 items-center text-muted-foreground">
                                 <MapPin className="w-4 h-4" />
-                                <p className="text-xs">
-                                  {event.is_online ? "Online" : "Offline"}
-                                </p>
+                                <p className="text-xs">Online</p>
                               </div>
                             </div>
                             <div className="flex gap-2">
@@ -406,11 +313,7 @@ export default function Page() {
                               </div>
                               <div className="flex gap-1 items-center text-muted-foreground">
                                 <Tag className="w-4 h-4" />
-                                <p className="text-xs">
-                                  {event.is_paid
-                                    ? formatPrice(event.price)
-                                    : "Gratis"}
-                                </p>
+                                <p className="text-xs">Gratis</p>
                               </div>
                             </div>
                           </div>

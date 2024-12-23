@@ -1,7 +1,7 @@
 "use client";
 import { getDashboardData } from "@/actions/dashboardAction";
 import { AreaGraph } from "@/components/charts/area-graph";
-import { BarGraph } from "@/components/charts/bar-graph";
+import { TransactionChart } from "@/components/charts/transaction-chart";
 import { PieGraph } from "@/components/charts/pie-graph";
 import { Overview } from "@/components/overview";
 import { RecentSales } from "@/components/recent-sales";
@@ -19,6 +19,7 @@ import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { events, users } from "@prisma/client";
 import Link from "next/link";
+import test from "node:test";
 import { useEffect, useState } from "react";
 
 type Tag = {
@@ -33,20 +34,16 @@ type TransactionType = {
   status: boolean;
 };
 
-type Dashboard = {
-  userCount: number;
-  eventCount: number;
-  channelCount: number;
-  totalprice: number | null;
-  transaction: TransactionType[];
-  tagsWithEventCount: Tag[];
+type DashboardData = {
+  eventName: string;
+  totalTickets: number;
+  totalIncome: number;
+  totalFollower: number;
+  totalEvent: { date: string; count: number }[];
 };
 
 export default function Page({ params }: { params: { id: string } }) {
-  const [dashboard, setDashboard] = useState<Dashboard>();
-  const [eventName, setEvent] = useState<string>("");
-  const [lastTransaction, setLastTransaction] = useState<TransactionType[]>();
-  const [income, setIncome] = useState<number>(0);
+  const [dashboardData, setDashboard] = useState<DashboardData>();
   const [chartData, setChartData] = useState<{ date: string; count: number }[]>(
     []
   );
@@ -54,36 +51,25 @@ export default function Page({ params }: { params: { id: string } }) {
   const getData = async () => {
     const data = await getDashboardData();
     setDashboard(data);
-    console.log(data.transaction);
   };
 
   const getTicket = async () => {
     const response = await fetch(`/api/events/dashboard/${params.id}`);
     if (response.ok) {
       const data = await response.json();
-      const chartData = data.groupedUserEvents.map(
-        (item: { date: string; count: number }) => ({
-          date: item.date,
-          count: item.count,
-        })
-      );
-      setChartData(chartData);
-      setIncome(data.totalIncome);
-      setEvent(data.eventName);
-      setLastTransaction(data.lastUserTrx);
+      setDashboard(data.data);
     }
   };
 
   useEffect(() => {
     getTicket();
-    getData();
   }, []);
   return (
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">
-            {eventName} Dashboard
+            {dashboardData?.eventName} Dashboard
           </h2>
         </div>
         <div className="flex gap-2">
@@ -118,7 +104,37 @@ export default function Page({ params }: { params: { id: string } }) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatPrice(income)}
+                    {formatPrice(dashboardData?.totalIncome)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    +100% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Follower Count
+                  </CardTitle>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    className="h-4 w-4 text-muted-foreground"
+                  >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {dashboardData?.totalFollower}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
@@ -128,31 +144,12 @@ export default function Page({ params }: { params: { id: string } }) {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="col-span-12">
-                <BarGraph
-                  chartData={chartData}
+                <TransactionChart
+                  chartData={dashboardData?.totalEvent   || []}
                   title="Bar chart transaksi user"
                   desc="list user transaction"
                 />
               </div>
-              {/* <Card className="col-span-4 md:col-span-3">
-                <CardHeader>
-                  <CardTitle>Last Transaction</CardTitle>
-                  <CardDescription>
-                    Ada sebanyak 10 transaksi di bulan ini.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {dashboard?.transaction && (
-                    <RecentSales data={dashboard.transaction} />
-                  )}
-                </CardContent>
-              </Card> */}
-              {/* <div className="col-span-4">
-                <AreaGraph />
-              </div>
-              <div className="col-span-4 md:col-span-3">
-                <PieGraph />
-              </div> */}
             </div>
           </TabsContent>
         </Tabs>

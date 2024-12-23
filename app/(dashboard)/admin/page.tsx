@@ -1,7 +1,7 @@
 "use client";
 import { getDashboardData } from "@/actions/dashboardAction";
 import { AreaGraph } from "@/components/charts/area-graph";
-import { BarGraph } from "@/components/charts/bar-graph";
+import { TransactionChart } from "@/components/charts/transaction-chart";
 import { PieGraph } from "@/components/charts/pie-graph";
 import { Overview } from "@/components/overview";
 import { RecentSales } from "@/components/recent-sales";
@@ -18,6 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatPrice } from "@/lib/format";
 import { events, users } from "@prisma/client";
 import { useEffect, useState } from "react";
+import { BarGraph } from "@/components/charts/bar-graph";
+import axios from "axios";
 import { ethers } from "ethers";
 import ABI from "@/constants/abi.json";
 import toast from "react-hot-toast";
@@ -46,8 +48,23 @@ type Dashboard = {
   tagsWithEventCount: Tag[];
 };
 
+type DashboardData = {
+  // events: events[];
+  eventCount: { date: string; count: number }[];
+  eventTotal: number;
+  user: users[];
+  userTotal: number;
+  chanelTotal: number;
+  // channels: chanels[];
+  totalIncome: number;
+  countEventRunning: number;
+  eventRunning: events[];
+  transaction: TransactionType[];
+};
+
 export default function Page() {
   const [dashboard, setDashboard] = useState<Dashboard>();
+  const [dashboardData, setDashboardData] = useState<DashboardData>();
 
   const getWebThree = async () => {
     try {
@@ -151,12 +168,35 @@ export default function Page() {
   };
 
   const getData = async () => {
-    const data = await getDashboardData();
-    console.log(data);
-    setDashboard(data);
+    // const data = await getDashboardData();
+    // setDashboard(data);
+    // console.log("data", data.transaction);
+
+    const response = await fetch(`/api/dashboard/admin`);
+    const responseData = await response.json();
+    setDashboardData(responseData.data);
+    console.log("dashboard data : ", responseData.data.transaction);
   };
+
+  const fetchVisitorCount = async () => {
+    try {
+      const response = await axios.get("https://api.statcounter.com/v3/stats", {
+        params: {
+          api_key: "5317e0c0",
+          project_id: "13071665",
+          stat_type: "visitors",
+        },
+      });
+      const count = response.data.totals.visitors || 0;
+      console.log("Visitor count:", count);
+    } catch (error) {
+      console.error("Error fetching visitor count:", error);
+    }
+  };
+
   useEffect(() => {
     getData();
+    fetchVisitorCount();
   }, []);
   return (
     <ScrollArea className="h-full">
@@ -196,7 +236,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatPrice(dashboard?.totalprice || 0)}
+                    {formatPrice(dashboardData?.totalIncome)}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
@@ -206,7 +246,7 @@ export default function Page() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Pengguna Aktif
+                    User Total
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -225,7 +265,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    +{dashboard?.userCount}
+                    +{dashboardData?.userTotal}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
@@ -235,7 +275,7 @@ export default function Page() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Event yang diupload
+                    Event Running
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -253,7 +293,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    +{dashboard?.eventCount}
+                    +{dashboardData?.countEventRunning}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
@@ -280,7 +320,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    +{dashboard?.channelCount}
+                    +{dashboardData?.chanelTotal}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% since last hour
@@ -290,27 +330,32 @@ export default function Page() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="col-span-4">
-                <BarGraph />
+                {/* <BarGraph /> */}
+                <TransactionChart
+                  chartData={dashboardData?.eventCount || []}
+                  title="Bar Chart Event"
+                  desc="List Event"
+                />
               </div>
               <Card className="col-span-4 md:col-span-3">
                 <CardHeader>
-                  <CardTitle>Transaksi terakhir</CardTitle>
+                  <CardTitle>Last Transaction</CardTitle>
                   <CardDescription>
-                    Ada sebanyak 10 transaksi di bulan ini.
+                    Last 5 transaction
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {dashboard?.transaction && (
-                    <RecentSales data={dashboard.transaction} />
+                  {dashboardData?.transaction && (
+                    <RecentSales data={dashboardData.transaction} />
                   )}
                 </CardContent>
               </Card>
-              <div className="col-span-4">
+              {/* <div className="col-span-4">
                 <AreaGraph />
               </div>
               <div className="col-span-4 md:col-span-3">
                 <PieGraph />
-              </div>
+              </div> */}
             </div>
           </TabsContent>
         </Tabs>

@@ -183,12 +183,16 @@ export default function Page() {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
     const tomorrow = setSeconds(
       setMinutes(setHours(addDays(new Date(), 1), 0), 0),
       0
     );
-    console.log(tomorrow);
+
+    if (values.event_date >= tomorrow) {
+      toast.error("Tanggal event harus minimal besok!");
+      return false;
+    }
+
     const webThree = await getWebThree();
 
     if (!webThree) {

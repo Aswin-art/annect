@@ -167,7 +167,7 @@ export default function Page({ params }: { params: { id: string } }) {
       return false;
     }
 
-    const eventDetails = await webThree.contract.events(0);
+    const eventDetails = await webThree.contract.events(events.id);
     let ticketPrice = eventDetails.priceETHWei;
     const ticketPriceInETH = ethers.formatEther(ticketPrice);
     const ticketPriceAsNumber = parseFloat(ticketPriceInETH);

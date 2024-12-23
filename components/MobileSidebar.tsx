@@ -15,7 +15,7 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
 export function MobileSidebar({ className }: SidebarProps) {
   const [open, setOpen] = useState(false);
   const { user } = useUser();
-  const isAdmin = user?.id === "user1_2qQVAqjws7Wzaaxxgif1KXia8x8";
+  const isAdmin = user?.id === "user_2qQVAqjws7Wzaaxxgif1KXia8x8";
   return (
     <>
       <Sheet open={open} onOpenChange={setOpen}>

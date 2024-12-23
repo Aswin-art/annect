@@ -54,6 +54,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EthReceived",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "uint256",
         "name": "eventId",
@@ -199,6 +218,7 @@
     "name": "Whitelistadd",
     "type": "event"
   },
+  { "stateMutability": "payable", "type": "fallback" },
   {
     "inputs": [],
     "name": "ADMIN_FEE_PERCENTAGE",
@@ -215,17 +235,15 @@
   },
   {
     "inputs": [],
-    "name": "USD_DECIMALS",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
+    "name": "TestwithdrawAllFunds",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "wallet", "type": "address" }
-    ],
-    "name": "Whitelist",
-    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "inputs": [],
+    "name": "USD_DECIMALS",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -371,6 +389,15 @@
     "type": "function"
   },
   {
+    "inputs": [
+      { "internalType": "address", "name": "wallet", "type": "address" }
+    ],
+    "name": "getUserStatus",
+    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "nextEventId",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
@@ -438,5 +465,6 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  }
+  },
+  { "stateMutability": "payable", "type": "receive" }
 ]

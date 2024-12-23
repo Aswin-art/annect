@@ -40,9 +40,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { tags } from "@prisma/client";
-import { getEventById } from "@/actions/eventAction";
+import { cancelEvent, getEventById } from "@/actions/eventAction";
 import Link from "next/link";
 import FallbackLoading from "@/components/Loading";
+import { ethers } from "ethers";
+import ABI from "@/constants/abi.json";
+
+const DEFAULT_ADDRESS_URL = process.env.NEXT_PUBLIC_WEB3_ADDRESS_URL ?? "";
+const DEFAULT_CHAIN_ID = BigInt(17000);
 
 const breadcrumbItems = [
   { title: "Dashboard", link: "/users" },
@@ -63,32 +68,102 @@ const formSchema = z.object({
   tag_id: z.string().min(2, {
     message: "tag must be exists.",
   }),
-  // category_id: z.string().min(2, {
-  //     message: "category must be exists.",
-  // }),
   location: z.string().min(2, {
     message: "location must be exists.",
   }),
-  // link_group: z.string().min(2, {
-  //     message: "link must be exists.",
-  // }),
   price: z.coerce.number().min(0),
   event_date: z.date(),
-  //   is_paid: z.coerce.boolean(),
+  capacity: z.coerce.number().min(0),
 });
 
 export default function Page({ params }: { params: { id: string } }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
-
   const [tags, setTags] = useState<tags[]>([]);
-  // const [categories, setCategories] = useState<categories[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
   const router = useRouter();
-
   const isLoading = form.formState.isSubmitting;
+
+  const getWebThree = async () => {
+    try {
+      if (typeof window.ethereum === "undefined") {
+        alert("Ethereum provider tidak ditemukan. Install MetaMask.");
+        return null;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+
+      if (network.chainId !== DEFAULT_CHAIN_ID) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: ethers.toQuantity(DEFAULT_CHAIN_ID) }],
+          });
+        } catch (switchError: unknown) {
+          if (isSwitchError(switchError)) {
+            if (switchError.code === 4902) {
+              try {
+                await window.ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [
+                    {
+                      chainId: ethers.toQuantity(DEFAULT_CHAIN_ID),
+                      chainName: "Holesky Testnet",
+                      nativeCurrency: {
+                        name: "Ethereum",
+                        symbol: "ETH",
+                        decimals: 18,
+                      },
+                      rpcUrls: ["https://rpc.holesky.io"],
+                      blockExplorerUrls: ["https://explorer.holesky.io"],
+                    },
+                  ],
+                });
+              } catch (addError) {
+                console.error("Gagal menambahkan jaringan Holesky:", addError);
+                alert(
+                  "Gagal menambahkan jaringan Holesky. Ganti jaringan secara manual."
+                );
+                return null;
+              }
+            } else {
+              console.error("Gagal mengganti jaringan:", switchError);
+              alert("Gagal mengganti jaringan. Ganti jaringan secara manual.");
+              return null;
+            }
+          } else {
+            console.error(
+              "Error tidak diketahui saat mengganti jaringan:",
+              switchError
+            );
+            alert(
+              "Terjadi error yang tidak diketahui. Ganti jaringan secara manual."
+            );
+            return null;
+          }
+        }
+      }
+
+      const accounts = await provider.listAccounts();
+      if (accounts.length === 0) {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+      }
+
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(DEFAULT_ADDRESS_URL, ABI, signer);
+
+      return { provider, signer, contract };
+    } catch (error) {
+      console.error("Error setting up provider, signer, or contract:", error);
+      return null;
+    }
+  };
+
+  function isSwitchError(error: unknown): error is { code: number } {
+    return typeof error === "object" && error !== null && "code" in error;
+  }
 
   const createHandler = async (values: z.infer<typeof formSchema>) => {
     console.log("values", values);
@@ -106,7 +181,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
       if (req.ok) {
         toast.success("Success!");
-        // router.push("/admin/tags");
+        router.push("/users/channels");
       } else {
         const errorData = await req.json();
         toast.error(`Failed! ${errorData.message || "Unknown error"}`);
@@ -122,22 +197,100 @@ export default function Page({ params }: { params: { id: string } }) {
     const req = await getEventById(params.id);
     if (req) {
       form.setValue("name", req?.name);
-      //   form.setValue("is_paid", req?.is_paid);
       form.setValue("image", req?.image);
       form.setValue("description", req?.description);
       form.setValue("price", req?.price);
       form.setValue("event_date", req?.event_date);
       form.setValue("location", req?.location);
-      // form.setValue("link_group", req?.link_group);
       form.setValue("tag_id", req?.tag_id);
-      //   form.setValue("category_id", req?.category_id);
+      form.setValue("capacity", req?.capacity);
       setLoading(false);
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await createHandler(values);
+  const dateToWei = (date: Date): string => {
+    const timestamp = Math.floor(date.getTime() / 1000);
+    return ethers.parseUnits(timestamp.toString(), "wei").toString();
   };
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const webThree = await getWebThree();
+    if (!webThree) {
+      toast.error("Error connecting to wallet!");
+      return false;
+    }
+
+    try {
+      const weiTimestamp = dateToWei(values.event_date);
+
+      const data = {
+        _eventID: params.id,
+        _newDate: weiTimestamp,
+        _newPriceUSD: values.price,
+        _newCapacity: values.capacity,
+      };
+
+      const web = await webThree.contract.editEvent(
+        data._eventID,
+        data._newDate,
+        data._newPriceUSD,
+        data._newCapacity
+      );
+
+      console.log("web", web);
+      if (!web.data) {
+        console.log("error web data")
+        toast.error("Error to create contract!");
+        return false;
+      }
+
+      await createHandler(values);
+    } catch (err) {
+      console.log(err);
+      if (err instanceof Error) {
+        if ("reason" in err) {
+          toast.error((err as any).reason);
+          return false;
+        }
+      }
+      toast.error("Error network!");
+      return false;
+    }
+  };
+
+  const handleCancel = async () => {
+    const webThree = await getWebThree();
+    if (!webThree) {
+      toast.error("Error connecting to wallet!");
+      return false;
+    }
+
+    try {
+      const data = {
+        _eventId: Number(params.id),
+      };
+
+      const web = await webThree.contract.cancelEvent(data._eventId);
+      if (!web.data) {
+        toast.error("Error to create contract!");
+        return false; 
+      }
+
+      await cancelEvent(Number(params.id));
+      toast.success("Success!");
+      router.push("/users/channels");
+    } catch (err) {
+      console.log(err);
+      if (err instanceof Error) {
+        if ("reason" in err) {
+          toast.error((err as any).reason);
+          return false;
+        }
+      }
+      toast.error("Error network!");
+      return false;
+    }
+  }
 
   useEffect(() => {
     const getTags = async () => {
@@ -222,27 +375,6 @@ export default function Page({ params }: { params: { id: string } }) {
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name="is_paid"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative flex items-center gap-2 mt-5">
-                        <Checkbox
-                          disabled={isLoading}
-                          onCheckedChange={field.onChange}
-                          checked={field.value}
-                        />
-                        <span className="text-muted-foreground text-xs">
-                          Apakah event berbayar?
-                        </span>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -326,34 +458,39 @@ export default function Page({ params }: { params: { id: string } }) {
                     </FormItem>
                   )}
                 />
-                {/* <FormField
-                                    control={form.control}
-                                    name="category_id"
-                                    render={({field}) => (
-                                        <FormItem>
-                                            <FormLabel>Kategori Event</FormLabel>
-                                            <FormControl>
-                                                <Select
-                                                    onValueChange={field.onChange}
-                                                    defaultValue={field.value}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Pilih Kategori"/>
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem key={0} value="umum">
-                                                            Umum
-                                                        </SelectItem>
-                                                        <SelectItem key={1} value="mahasiswa">
-                                                            Mahasiswa
-                                                        </SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </FormControl>
-                                            <FormMessage/>
-                                        </FormItem>
-                                    )}
-                                /> */}
+                <FormField
+                  control={form.control}
+                  name="capacity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Capacity</FormLabel>
+                      <FormControl>
+                        <Input disabled={isLoading} type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input disabled={isLoading} type="text" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="">
+                  <Button type="button" variant={`destructive`} disabled={isLoading} onClick={handleCancel}>
+                    Cancel Event
+                  </Button>
               </div>
               <Separator className="mt-5" />
               <div className="flex gap-2">
@@ -368,7 +505,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 >
                   Kembali
                 </Link>
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading} onClick={handleCancel}>
                   {isLoading ? "Loading..." : "Submit"}
                 </Button>
               </div>

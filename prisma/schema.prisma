@@ -44,6 +44,7 @@ model events {
   updated_at  DateTime      @updatedAt
   channels    channels?     @relation(fields: [channel_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_1")
   tags        tags?         @relation(fields: [tag_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_3")
+  
   favorites   favorites[]
   user_events user_events[]
 
@@ -90,6 +91,7 @@ model user_events {
   user_id    String?   @db.VarChar(255)
   event_id   Int?
   status     Boolean?
+  qty        Int 
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   tickets    tickets[]

@@ -65,6 +65,7 @@ type DashboardData = {
 export default function Page() {
   const [dashboardData, setDashboardData] = useState<DashboardData>();
   const [loading, setLoading] = useState(false);
+  const [profit, setProfit] = useState(0);
 
   const getWebThree = async () => {
     try {
@@ -170,35 +171,64 @@ export default function Page() {
   };
 
   const getData = async () => {
-    // const data = await getDashboardData();
-    // setDashboard(data);
-    // console.log("data", data.transaction);
-
     const response = await fetch(`/api/dashboard/admin`);
     const responseData = await response.json();
     setDashboardData(responseData.data);
-    console.log("dashboard data : ", responseData.data.transaction);
   };
 
   const fetchVisitorCount = async () => {
+    // try {
+    //   const response = await axios.get("https://api.statcounter.com/v3/stats", {
+    //     params: {
+    //       api_key: "5317e0c0",
+    //       project_id: "13071665",
+    //       stat_type: "visitors",
+    //     },
+    //   });
+    //   const count = response.data.totals.visitors || 0;
+    //   console.log("Visitor count:", count);
+    // } catch (error) {
+    //   console.error("Error fetching visitor count:", error);
+    // }
+  };
+
+  const fetchProfit = async () => {
+    const webThree = await getWebThree();
+    if (!webThree) {
+      toast.error("Error connecting to wallet!");
+      return false;
+    }
+
     try {
-      const response = await axios.get("https://api.statcounter.com/v3/stats", {
-        params: {
-          api_key: "5317e0c0",
-          project_id: "13071665",
-          stat_type: "visitors",
-        },
-      });
-      const count = response.data.totals.visitors || 0;
-      console.log("Visitor count:", count);
-    } catch (error) {
-      console.error("Error fetching visitor count:", error);
+      const data = await webThree.contract.CheckProfit();
+      const profit = data.toString();
+      const profitInEth = parseFloat(ethers.formatEther(profit));
+      const ethUsd = await getEthPriceInUsd();
+      const profitInUsd = profitInEth * ethUsd;
+      setProfit(profitInUsd);
+    } catch (err) {
+      console.log(err);
+      return false;
     }
   };
+
+  async function getEthPriceInUsd() {
+    try {
+      const response = await axios.get(
+        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+      );
+      const ethPriceInUsd = response.data.ethereum.usd;
+      return ethPriceInUsd;
+    } catch (error) {
+      console.error("Error fetching ETH price:", error);
+      return null;
+    }
+  }
 
   useEffect(() => {
     getData();
     fetchVisitorCount();
+    fetchProfit();
   }, []);
   return (
     <ScrollArea className="h-full">
@@ -377,94 +407,10 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatPrice(dashboardData?.totalIncome, "USD")}
+                    {formatPrice(profit, "USD")}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    User Total
-                  </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    +{dashboardData?.userTotal}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    +100% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Event Running
-                  </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <rect width="20" height="14" x="2" y="5" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    +{dashboardData?.countEventRunning}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    +100% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Channel yang didirikan
-                  </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                  </svg>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    +{dashboardData?.chanelTotal}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    +100% since last hour
                   </p>
                 </CardContent>
               </Card>

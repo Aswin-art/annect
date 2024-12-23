@@ -1,7 +1,6 @@
 "use server";
 import { db } from "@/lib/db";
 import {
-  sendBroadcastEmail,
   sendEventCreatedEmail,
   sendPaymentDoneEmail,
   sendPaymentProcessEmail,
@@ -11,28 +10,22 @@ import { currentUser } from "@clerk/nextjs/server";
 export const getAllData = async (
   nameParams?: string | null,
   tagParams?: string | null,
-  categoryParams?: string | null,
   priceParams?: string | null
 ) => {
   const user = await currentUser();
 
   try {
     const getTags = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "/tags");
-    const getCategories = await fetch(
-      process.env.NEXT_PUBLIC_API_BASE_URL + "/categories"
-    );
     const getEvents = await fetch(
       process.env.NEXT_PUBLIC_API_BASE_URL +
-        `/events?users=${user?.id}&name=${nameParams}&tags=${tagParams}&categories=${categoryParams}&prices=${priceParams}`
+        `/events?users=${user?.id}&name=${nameParams}&tags=${tagParams}&prices=${priceParams}`
     );
 
     const tagRes = await getTags.json();
-    const categoryRes = await getCategories.json();
     const eventRes = await getEvents.json();
 
     const data = {
       tags: tagRes,
-      categories: categoryRes,
       events: eventRes,
     };
 
@@ -176,6 +169,8 @@ type createValues = {
   price: number;
   event_date: Date;
   channel_id?: string;
+  capacity: number;
+  stock?: number;
 };
 
 export const createEvents = async (values: createValues) => {
@@ -185,6 +180,7 @@ export const createEvents = async (values: createValues) => {
     const channel = await getSpesificChannelByUserId(user.id);
     if (channel) {
       values.channel_id = channel.id;
+      values.stock = values.capacity;
       try {
         const req = await fetch(
           process.env.NEXT_PUBLIC_API_BASE_URL + "/events",
@@ -202,8 +198,6 @@ export const createEvents = async (values: createValues) => {
             channel.email,
             user?.primaryWeb3Wallet?.web3Wallet as string
           );
-
-          await sendBroadcastEmail(values.channel_id);
           return true;
         }
 

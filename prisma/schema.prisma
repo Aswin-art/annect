@@ -28,7 +28,7 @@ model channels {
 }
 
 model events {
-  id          String        @id @default(cuid())
+  id          Int           @id @default(autoincrement())
   channel_id  String?       @db.VarChar(255)
   tag_id      String?       @db.VarChar(255)
   name        String?       @db.VarChar(255)
@@ -38,6 +38,7 @@ model events {
   price       Float?
   status      events_status @default(ONGOING)
   capacity    Int           @default(0)
+  stock       Int           @default(0)
   event_date  DateTime?     @db.DateTime(0)
   created_at  DateTime      @default(now())
   updated_at  DateTime      @updatedAt
@@ -53,7 +54,7 @@ model events {
 model favorites {
   id         String   @id @default(cuid())
   user_id    String?  @db.VarChar(255)
-  event_id   String?  @db.VarChar(255)
+  event_id   Int?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   users      users?   @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "favorites_ibfk_1")
@@ -85,15 +86,15 @@ model tags {
 }
 
 model user_events {
-  id         String   @id @default(cuid())
-  user_id    String?  @db.VarChar(255)
-  event_id   String?  @db.VarChar(255)
+  id         String    @id @default(cuid())
+  user_id    String?   @db.VarChar(255)
+  event_id   Int?
   status     Boolean?
-  qty        Int      
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  users      users?   @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_1")
-  events     events?  @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_2")
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  tickets    tickets[]
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_1")
+  events     events?   @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_2")
 
   @@index([event_id], map: "event_id")
   @@index([user_id], map: "user_id")
@@ -111,6 +112,13 @@ model users {
   user_events    user_events[]
 }
 
+model tickets {
+  id            String       @id @default(cuid())
+  status        Boolean      @default(false)
+  user_events   user_events? @relation(fields: [user_eventsId], references: [id])
+  user_eventsId String?
+}
+
 enum users_role {
   ADMIN
   USER
@@ -118,7 +126,7 @@ enum users_role {
 
 enum events_status {
   DONE
-  PENDING
+  CANCELED
   ONGOING
 }
 

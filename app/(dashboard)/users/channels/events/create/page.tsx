@@ -188,7 +188,7 @@ export default function Page() {
       0
     );
 
-    if (values.event_date >= tomorrow) {
+    if (values.event_date < tomorrow) {
       toast.error("Tanggal event harus minimal besok!");
       return false;
     }

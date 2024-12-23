@@ -200,9 +200,8 @@ export default function Page() {
     }
 
     try {
-      // const data = await webThree.contract.CheckProfit();
-      // const profit = data.toString().slice(0, -1);
-      const profit = BigInt("10000000000000000");
+      const data = await webThree.contract.CheckProfit();
+      const profit = data.toString();
       const profitInEth = parseFloat(ethers.formatEther(profit));
       const ethUsd = await getEthPriceInUsd();
       const profitInUsd = profitInEth * ethUsd;

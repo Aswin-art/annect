@@ -65,7 +65,7 @@ export const userNavItems: NavItem[] = [
     label: "channel",
   },
   {
-    title: "History Event",
+    title: "Tickets",
     href: "/users/history-events",
     icon: "historyEvent",
     label: "historyEvent",
@@ -104,12 +104,6 @@ export const adminNavItems: NavItem[] = [
     label: "tag",
   },
   {
-    title: "Category",
-    href: "/admin/categories",
-    icon: "page",
-    label: "category",
-  },
-  {
     title: "Channel",
     href: "/admin/channels",
     icon: "channel",
@@ -120,12 +114,6 @@ export const adminNavItems: NavItem[] = [
     href: "/admin/events",
     icon: "event",
     label: "event",
-  },
-  {
-    title: "User Payment",
-    href: "/admin/payments",
-    icon: "billing",
-    label: "user payment",
   },
 ];
 

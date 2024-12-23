@@ -267,7 +267,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
     try {
       const data = {
-        _eventId: Number(params.id) - 1,
+        _eventId: Number(params.id),
       };
 
       const web = await webThree.contract.cancelEvent(data._eventId);

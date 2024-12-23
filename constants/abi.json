@@ -1,11 +1,5 @@
 [
-  {
-    "inputs": [
-      { "internalType": "address", "name": "_tokenAddress", "type": "address" }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
+  { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
   {
     "anonymous": false,
     "inputs": [
@@ -19,12 +13,6 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "feeETH",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "feeTokens",
         "type": "uint256"
       }
     ],
@@ -112,12 +100,6 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "priceToken",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "capacity",
         "type": "uint256"
       },
@@ -151,12 +133,6 @@
         "internalType": "uint256",
         "name": "balanceETH",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "balanceTokens",
-        "type": "uint256"
       }
     ],
     "name": "FundsWithdrawn",
@@ -176,12 +152,6 @@
         "internalType": "address",
         "name": "buyer",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "paymentMethod",
-        "type": "string"
       },
       {
         "indexed": false,
@@ -217,10 +187,7 @@
   {
     "inputs": [],
     "name": "CheckProfit",
-    "outputs": [
-      { "internalType": "uint256", "name": "", "type": "uint256" },
-      { "internalType": "uint256", "name": "", "type": "uint256" }
-    ],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -257,13 +224,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "adminFeeTokens",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "name": "blacklist",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
@@ -272,7 +232,8 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "_eventId", "type": "uint256" }
+      { "internalType": "uint256", "name": "_eventId", "type": "uint256" },
+      { "internalType": "uint256", "name": "ticketCount", "type": "uint256" }
     ],
     "name": "buyTicketWithETH",
     "outputs": [],
@@ -283,7 +244,7 @@
     "inputs": [
       { "internalType": "uint256", "name": "_eventId", "type": "uint256" }
     ],
-    "name": "buyTicketWithToken",
+    "name": "cancelEvent",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -300,7 +261,6 @@
       { "internalType": "string", "name": "_name", "type": "string" },
       { "internalType": "uint256", "name": "_date", "type": "uint256" },
       { "internalType": "uint256", "name": "_priceETHWei", "type": "uint256" },
-      { "internalType": "uint256", "name": "_priceToken", "type": "uint256" },
       { "internalType": "uint256", "name": "_capacity", "type": "uint256" }
     ],
     "name": "createEvent",
@@ -317,11 +277,6 @@
         "name": "_newPriceETHWei",
         "type": "uint256"
       },
-      {
-        "internalType": "uint256",
-        "name": "_newPriceToken",
-        "type": "uint256"
-      },
       { "internalType": "uint256", "name": "_newCapacity", "type": "uint256" }
     ],
     "name": "editEvent",
@@ -336,14 +291,12 @@
       { "internalType": "string", "name": "name", "type": "string" },
       { "internalType": "uint256", "name": "date", "type": "uint256" },
       { "internalType": "uint256", "name": "priceETHWei", "type": "uint256" },
-      { "internalType": "uint256", "name": "priceToken", "type": "uint256" },
       { "internalType": "uint256", "name": "capacity", "type": "uint256" },
       { "internalType": "uint256", "name": "sold", "type": "uint256" },
       { "internalType": "bool", "name": "isActive", "type": "bool" },
       { "internalType": "bool", "name": "isCanceled", "type": "bool" },
       { "internalType": "address", "name": "creator", "type": "address" },
-      { "internalType": "uint256", "name": "balanceETH", "type": "uint256" },
-      { "internalType": "uint256", "name": "balanceTokens", "type": "uint256" }
+      { "internalType": "uint256", "name": "balanceETH", "type": "uint256" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -361,32 +314,28 @@
             "name": "priceETHWei",
             "type": "uint256"
           },
-          {
-            "internalType": "uint256",
-            "name": "priceToken",
-            "type": "uint256"
-          },
           { "internalType": "uint256", "name": "capacity", "type": "uint256" },
           { "internalType": "uint256", "name": "sold", "type": "uint256" },
           { "internalType": "bool", "name": "isActive", "type": "bool" },
           { "internalType": "bool", "name": "isCanceled", "type": "bool" },
           { "internalType": "address", "name": "creator", "type": "address" },
-          {
-            "internalType": "uint256",
-            "name": "balanceETH",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "balanceTokens",
-            "type": "uint256"
-          }
+          { "internalType": "uint256", "name": "balanceETH", "type": "uint256" }
         ],
         "internalType": "struct MotokoShinkai.EventInfo[]",
         "name": "",
         "type": "tuple[]"
       }
     ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_eventId", "type": "uint256" },
+      { "internalType": "address", "name": "_user", "type": "address" }
+    ],
+    "name": "getTicketsBought",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -423,15 +372,12 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "testToken",
-    "outputs": [
-      {
-        "internalType": "contract IERC20Interface",
-        "name": "",
-        "type": "address"
-      }
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "address", "name": "", "type": "address" }
     ],
+    "name": "ticketsBought",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -446,6 +392,19 @@
     "type": "function"
   },
   {
+<<<<<<< HEAD
+=======
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "name": "userEthPaid",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+>>>>>>> 9853fd6023f5eb25c55c9ed41a00a5f528ab298a
     "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "name": "whitelistedCreators",
     "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],

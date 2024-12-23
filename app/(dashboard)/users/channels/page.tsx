@@ -192,46 +192,6 @@ export default function Page() {
                               <CardTitle>
                                 <div className="flex w-full justify-between items-center">
                                   {event.name}
-                                  {event.status == "ONGOING" ||
-                                    (event.status == "DONE" && (
-                                      <Button disabled>Event Berjalan</Button>
-                                    ))}
-
-                                  {event.status == "PENDING" && (
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button variant={"secondary"}>
-                                          Bayar Event
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent className="sm:max-w-[425px]">
-                                        <DialogHeader>
-                                          <DialogTitle>
-                                            Lunasi Pembayaran
-                                          </DialogTitle>
-                                          <DialogDescription>
-                                            Upload bukti pembayaranmu disini.
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <FileUpload
-                                          apiEndpoint="image"
-                                          onChange={(url) =>
-                                            setPaymentImage(url)
-                                          }
-                                          value={paymentImage}
-                                        />
-                                        <DialogFooter>
-                                          <Button
-                                            onClick={() =>
-                                              handleSubmitPayment(event.id)
-                                            }
-                                          >
-                                            Submit
-                                          </Button>
-                                        </DialogFooter>
-                                      </DialogContent>
-                                    </Dialog>
-                                  )}
                                 </div>
                               </CardTitle>
                               <CardDescription className="max-w-lg">
@@ -264,11 +224,7 @@ export default function Page() {
                                     Dashboard Analytic
                                   </Button>
                                 </Link>
-                                <Link
-                                  href={
-                                    "/events/" + event.id
-                                  }
-                                >
+                                <Link href={"/events/" + event.id}>
                                   <Button variant={"default"}>
                                     Detail Event
                                   </Button>

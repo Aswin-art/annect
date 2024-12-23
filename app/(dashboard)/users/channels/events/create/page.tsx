@@ -182,6 +182,26 @@ export default function Page() {
     return ethers.parseUnits(timestamp.toString(), "wei").toString();
   };
 
+  const convertToWei = async (usdAmount: number) => {
+    const url =
+      "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd";
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      const ethPriceInUSD = data.ethereum.usd;
+
+      const ethAmount = usdAmount / ethPriceInUSD;
+      const ethAmountRounded = ethAmount.toFixed(5);
+
+      const ethInWei = ethers.parseEther(ethAmountRounded.toString());
+
+      return ethInWei;
+    } catch (error) {
+      console.error("Error fetching ETH price:", error);
+      alert("Failed to fetch Ethereum price from CoinGecko.");
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const tomorrow = setSeconds(
       setMinutes(setHours(addDays(new Date(), 1), 0), 0),
@@ -203,9 +223,12 @@ export default function Page() {
     try {
       const weiTimestamp = dateToWei(values.event_date);
 
+      const priceInWei = await convertToWei(values.price);
+
       const data = {
         _name: values.name,
         _date: weiTimestamp,
+        _priceETHWei: priceInWei,
         _priceUSD: values.price,
         _capacity: values.capacity,
       };

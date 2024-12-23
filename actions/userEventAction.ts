@@ -19,7 +19,7 @@ export const getAllData = async () => {
   }
 };
 
-export const joinEvent = async (event_id: string) => {
+export const joinEvent = async (event_id: number) => {
   const user = await currentUser();
 
   if (user) {

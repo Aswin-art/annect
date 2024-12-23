@@ -1,11 +1,14 @@
-export function formatPrice(number: number | undefined | null) {
+export function formatPrice(
+  number: number | undefined | null,
+  currency: string
+) {
   if (number === undefined || number === null) {
     return "IDR 0"; // Atau format lain sesuai kebutuhan
   }
 
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
-    currency: "IDR",
+    currency,
   }).format(number);
 }
 

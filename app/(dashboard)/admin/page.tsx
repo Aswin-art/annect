@@ -19,7 +19,12 @@ import { formatPrice } from "@/lib/format";
 import { events, users } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { BarGraph } from "@/components/charts/bar-graph";
-import axios from "axios";
+import { ethers } from "ethers";
+import ABI from "@/constants/abi.json";
+import toast from "react-hot-toast";
+
+const DEFAULT_ADDRESS_URL = process.env.NEXT_PUBLIC_WEB3_ADDRESS_URL ?? "";
+const DEFAULT_CHAIN_ID = BigInt(17000);
 
 type Tag = {
   name: string;
@@ -59,6 +64,108 @@ type DashboardData = {
 export default function Page() {
   const [dashboard, setDashboard] = useState<Dashboard>();
   const [dashboardData, setDashboardData] = useState<DashboardData>();
+
+  const getWebThree = async () => {
+    try {
+      if (typeof window.ethereum === "undefined") {
+        alert("Ethereum provider tidak ditemukan. Install MetaMask.");
+        return null;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+
+      if (network.chainId !== DEFAULT_CHAIN_ID) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: ethers.toQuantity(DEFAULT_CHAIN_ID) }],
+          });
+        } catch (switchError: unknown) {
+          if (isSwitchError(switchError)) {
+            if (switchError.code === 4902) {
+              try {
+                await window.ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [
+                    {
+                      chainId: ethers.toQuantity(DEFAULT_CHAIN_ID),
+                      chainName: "Holesky Testnet",
+                      nativeCurrency: {
+                        name: "Ethereum",
+                        symbol: "ETH",
+                        decimals: 18,
+                      },
+                      rpcUrls: ["https://rpc.holesky.io"],
+                      blockExplorerUrls: ["https://explorer.holesky.io"],
+                    },
+                  ],
+                });
+              } catch (addError) {
+                console.error("Gagal menambahkan jaringan Holesky:", addError);
+                alert(
+                  "Gagal menambahkan jaringan Holesky. Ganti jaringan secara manual."
+                );
+                return null;
+              }
+            } else {
+              console.error("Gagal mengganti jaringan:", switchError);
+              alert("Gagal mengganti jaringan. Ganti jaringan secara manual.");
+              return null;
+            }
+          } else {
+            console.error(
+              "Error tidak diketahui saat mengganti jaringan:",
+              switchError
+            );
+            alert(
+              "Terjadi error yang tidak diketahui. Ganti jaringan secara manual."
+            );
+            return null;
+          }
+        }
+      }
+
+      const accounts = await provider.listAccounts();
+      if (accounts.length === 0) {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+      }
+
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(DEFAULT_ADDRESS_URL, ABI, signer);
+
+      return { provider, signer, contract };
+    } catch (error) {
+      console.error("Error setting up provider, signer, or contract:", error);
+      return null;
+    }
+  };
+
+  function isSwitchError(error: unknown): error is { code: number } {
+    return typeof error === "object" && error !== null && "code" in error;
+  }
+
+  const handleWithdrawAdminFund = async () => {
+    try {
+      const web = await getWebThree();
+
+      if (!web) {
+        toast.error("Error connecting to wallet!");
+        return false;
+      }
+
+      const res = await web.contract.TestwithdrawAllFunds();
+
+      if (res) {
+        toast.success("Withdrawal successfull!");
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("Network error!");
+      return false;
+    }
+  };
+
   const getData = async () => {
     // const data = await getDashboardData();
     // setDashboard(data);
@@ -71,19 +178,19 @@ export default function Page() {
   };
 
   const fetchVisitorCount = async () => {
-    try {
-      const response = await axios.get("https://api.statcounter.com/v3/stats", {
-        params: {
-          api_key: "5317e0c0",
-          project_id: "13071665",
-          stat_type: "visitors",
-        },
-      });
-      const count = response.data.totals.visitors || 0;
-      console.log("Visitor count:", count);
-    } catch (error) {
-      console.error("Error fetching visitor count:", error);
-    }
+    // try {
+    //   const response = await axios.get("https://api.statcounter.com/v3/stats", {
+    //     params: {
+    //       api_key: "5317e0c0",
+    //       project_id: "13071665",
+    //       stat_type: "visitors",
+    //     },
+    //   });
+    //   const count = response.data.totals.visitors || 0;
+    //   console.log("Visitor count:", count);
+    // } catch (error) {
+    //   console.error("Error fetching visitor count:", error);
+    // }
   };
 
   useEffect(() => {
@@ -104,6 +211,7 @@ export default function Page() {
             <TabsTrigger value="analytics" disabled>
               Analytics
             </TabsTrigger>
+            <Button onClick={handleWithdrawAdminFund}>WD</Button>
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

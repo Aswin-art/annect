@@ -35,16 +35,22 @@ import {
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { DatetimePicker } from "@/components/ui/extension/datetime-picker";
 
-import { format } from "date-fns";
+import { addDays, format, setHours, setMinutes, setSeconds } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { tags } from "@prisma/client";
 import { createEvents } from "@/actions/eventAction";
 import dynamic from "next/dynamic";
+import { ethers } from "ethers";
+import ABI from "@/constants/abi.json";
 const EditableEditor = dynamic(() => import("@/components/EditableEditor"), {
   ssr: false,
 });
+
+const DEFAULT_ADDRESS_URL = process.env.NEXT_PUBLIC_WEB3_ADDRESS_URL ?? "";
+const DEFAULT_CHAIN_ID = BigInt(17000);
 
 const breadcrumbItems = [
   { title: "Dashboard", link: "/users" },
@@ -68,7 +74,7 @@ const formSchema = z.object({
   capacity: z.coerce.number().min(10),
   location: z.string(),
   price: z.coerce.number().min(10),
-  event_date: z.date(),
+  event_date: z.coerce.date(),
 });
 
 export default function Page() {
@@ -91,15 +97,140 @@ export default function Page() {
 
   const isLoading = form.formState.isSubmitting;
 
+  const getWebThree = async () => {
+    try {
+      if (typeof window.ethereum === "undefined") {
+        alert("Ethereum provider tidak ditemukan. Install MetaMask.");
+        return null;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+
+      if (network.chainId !== DEFAULT_CHAIN_ID) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: ethers.toQuantity(DEFAULT_CHAIN_ID) }],
+          });
+        } catch (switchError: unknown) {
+          if (isSwitchError(switchError)) {
+            if (switchError.code === 4902) {
+              try {
+                await window.ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [
+                    {
+                      chainId: ethers.toQuantity(DEFAULT_CHAIN_ID),
+                      chainName: "Holesky Testnet",
+                      nativeCurrency: {
+                        name: "Ethereum",
+                        symbol: "ETH",
+                        decimals: 18,
+                      },
+                      rpcUrls: ["https://rpc.holesky.io"],
+                      blockExplorerUrls: ["https://explorer.holesky.io"],
+                    },
+                  ],
+                });
+              } catch (addError) {
+                console.error("Gagal menambahkan jaringan Holesky:", addError);
+                alert(
+                  "Gagal menambahkan jaringan Holesky. Ganti jaringan secara manual."
+                );
+                return null;
+              }
+            } else {
+              console.error("Gagal mengganti jaringan:", switchError);
+              alert("Gagal mengganti jaringan. Ganti jaringan secara manual.");
+              return null;
+            }
+          } else {
+            console.error(
+              "Error tidak diketahui saat mengganti jaringan:",
+              switchError
+            );
+            alert(
+              "Terjadi error yang tidak diketahui. Ganti jaringan secara manual."
+            );
+            return null;
+          }
+        }
+      }
+
+      const accounts = await provider.listAccounts();
+      if (accounts.length === 0) {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+      }
+
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(DEFAULT_ADDRESS_URL, ABI, signer);
+
+      return { provider, signer, contract };
+    } catch (error) {
+      console.error("Error setting up provider, signer, or contract:", error);
+      return null;
+    }
+  };
+
+  function isSwitchError(error: unknown): error is { code: number } {
+    return typeof error === "object" && error !== null && "code" in error;
+  }
+
+  const dateToWei = (date: Date): string => {
+    const timestamp = Math.floor(date.getTime() / 1000);
+    return ethers.parseUnits(timestamp.toString(), "wei").toString();
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const create = await createEvents(values);
+    console.log(values);
+    const tomorrow = setSeconds(
+      setMinutes(setHours(addDays(new Date(), 1), 0), 0),
+      0
+    );
+    console.log(tomorrow);
+    const webThree = await getWebThree();
 
-    if (create) {
-      toast.success("Success!");
+    if (!webThree) {
+      toast.error("Error connecting to wallet!");
+      return false;
+    }
 
-      router.push("/users/channels");
-    } else {
-      toast.error("Failed!");
+    try {
+      const weiTimestamp = dateToWei(values.event_date);
+
+      const data = {
+        _name: values.name,
+        _date: weiTimestamp,
+        _priceUSD: values.price,
+        _capacity: values.capacity,
+      };
+
+      const web = await webThree.contract.createEvent(
+        data._name,
+        data._date,
+        data._priceUSD,
+        data._capacity
+      );
+
+      if (!web.data) {
+        toast.error("Error to create contract!");
+        return false;
+      }
+
+      const create = await createEvents(values);
+
+      if (create) {
+        toast.success("Success!");
+
+        router.push("/users/channels");
+      } else {
+        toast.error("Failed!");
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("Error network!");
+      return false;
     }
   };
 
@@ -196,7 +327,7 @@ export default function Page() {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="price"
@@ -216,37 +347,13 @@ export default function Page() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tanggal Event</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              fromDate={new Date()}
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </FormControl>
+                    <DatetimePicker
+                      {...field}
+                      format={[
+                        ["months", "days", "years"],
+                        ["hours", "minutes", "am/pm"],
+                      ]}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}

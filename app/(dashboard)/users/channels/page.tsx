@@ -63,7 +63,6 @@ export default function Page() {
   const [paymentImage, setPaymentImage] = useState<string | undefined>("");
   const getData = async () => {
     const req = await getChannelByUserId();
-    console.log("req from page", req);
     setChannels(req);
     setLoading(false);
   };
@@ -128,7 +127,7 @@ export default function Page() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-4">
                         <Avatar className="w-40 h-40">
-                          <AvatarImage src={channels?.users?.image || ""} />
+                          <AvatarImage src={channels.image || ""} />
                           <AvatarFallback>CN</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col gap-2">
@@ -137,7 +136,7 @@ export default function Page() {
                           </h3>
                           <div className="flex gap-2">
                             <p className="text-muted-foreground text-sm">
-                              {channels?.users?.name}
+                              {channels?.users?.wallet_address}
                             </p>
                             <p className="text-muted-foreground text-sm">|</p>
                             <p className="text-muted-foreground text-sm">
@@ -252,7 +251,12 @@ export default function Page() {
                             </CardHeader>
                             <CardFooter>
                               <div className="ms-auto flex gap-2">
-                                <Link href={"/users/channels/events/dashboard/" + event.id}>
+                                <Link
+                                  href={
+                                    "/users/channels/events/dashboard/" +
+                                    event.id
+                                  }
+                                >
                                   <Button
                                     variant={"secondary"}
                                     className="hover:text-primary transition-all duration-300"

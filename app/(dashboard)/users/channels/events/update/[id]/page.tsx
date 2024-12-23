@@ -43,6 +43,11 @@ import { tags } from "@prisma/client";
 import { getEventById } from "@/actions/eventAction";
 import Link from "next/link";
 import FallbackLoading from "@/components/Loading";
+import { ethers } from "ethers";
+import ABI from "@/constants/abi.json";
+
+const DEFAULT_ADDRESS_URL = process.env.NEXT_PUBLIC_WEB3_ADDRESS_URL ?? "";
+const DEFAULT_CHAIN_ID = BigInt(17000);
 
 const breadcrumbItems = [
   { title: "Dashboard", link: "/users" },
@@ -80,6 +85,86 @@ export default function Page({ params }: { params: { id: string } }) {
   const router = useRouter();
   const isLoading = form.formState.isSubmitting;
 
+  const getWebThree = async () => {
+    try {
+      if (typeof window.ethereum === "undefined") {
+        alert("Ethereum provider tidak ditemukan. Install MetaMask.");
+        return null;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+
+      if (network.chainId !== DEFAULT_CHAIN_ID) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: ethers.toQuantity(DEFAULT_CHAIN_ID) }],
+          });
+        } catch (switchError: unknown) {
+          if (isSwitchError(switchError)) {
+            if (switchError.code === 4902) {
+              try {
+                await window.ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [
+                    {
+                      chainId: ethers.toQuantity(DEFAULT_CHAIN_ID),
+                      chainName: "Holesky Testnet",
+                      nativeCurrency: {
+                        name: "Ethereum",
+                        symbol: "ETH",
+                        decimals: 18,
+                      },
+                      rpcUrls: ["https://rpc.holesky.io"],
+                      blockExplorerUrls: ["https://explorer.holesky.io"],
+                    },
+                  ],
+                });
+              } catch (addError) {
+                console.error("Gagal menambahkan jaringan Holesky:", addError);
+                alert(
+                  "Gagal menambahkan jaringan Holesky. Ganti jaringan secara manual."
+                );
+                return null;
+              }
+            } else {
+              console.error("Gagal mengganti jaringan:", switchError);
+              alert("Gagal mengganti jaringan. Ganti jaringan secara manual.");
+              return null;
+            }
+          } else {
+            console.error(
+              "Error tidak diketahui saat mengganti jaringan:",
+              switchError
+            );
+            alert(
+              "Terjadi error yang tidak diketahui. Ganti jaringan secara manual."
+            );
+            return null;
+          }
+        }
+      }
+
+      const accounts = await provider.listAccounts();
+      if (accounts.length === 0) {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+      }
+
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(DEFAULT_ADDRESS_URL, ABI, signer);
+
+      return { provider, signer, contract };
+    } catch (error) {
+      console.error("Error setting up provider, signer, or contract:", error);
+      return null;
+    }
+  };
+
+  function isSwitchError(error: unknown): error is { code: number } {
+    return typeof error === "object" && error !== null && "code" in error;
+  }
+
   const createHandler = async (values: z.infer<typeof formSchema>) => {
     console.log("values", values);
     try {
@@ -96,7 +181,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
       if (req.ok) {
         toast.success("Success!");
-        // router.push("/admin/tags");
+        router.push("/user/chanels");
       } else {
         const errorData = await req.json();
         toast.error(`Failed! ${errorData.message || "Unknown error"}`);
@@ -110,7 +195,6 @@ export default function Page({ params }: { params: { id: string } }) {
 
   const getData = async () => {
     const req = await getEventById(params.id);
-    console.log("req", req);
     if (req) {
       form.setValue("name", req?.name);
       form.setValue("image", req?.image);
@@ -124,8 +208,56 @@ export default function Page({ params }: { params: { id: string } }) {
     }
   };
 
+  const dateToWei = (date: Date): string => {
+    const timestamp = Math.floor(date.getTime() / 1000);
+    return ethers.parseUnits(timestamp.toString(), "wei").toString();
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await createHandler(values);
+    const webThree = await getWebThree();
+    if (!webThree) {
+      toast.error("Error connecting to wallet!");
+      return false;
+    }
+
+    try {
+      const weiTimestamp = dateToWei(values.event_date);
+
+      const data = {
+        _eventID: 0,
+        _newDate : weiTimestamp,
+        _newPriceUSD: values.price,
+        _newCapacity: values.capacity
+      };
+      const web = await webThree.contract.editEvent(
+        data._eventID,
+        data._newDate,
+        data._newPriceUSD,
+        data._newCapacity
+      );
+
+      console.log("web", web);
+      if (!web.data) {
+        console.log("error web data")
+        toast.error("Error to create contract!");
+        return false;
+      }
+
+      await createHandler(values);
+      toast.success("Success!");
+      router.push("/users/channels");
+    } catch (err) {
+      console.log("masuk")
+      console.log(err);
+      if (err instanceof Error) {
+        if ("reason" in err) {
+          toast.error((err as any).reason);
+          return false;
+        }
+      }
+      toast.error("Error network!");
+      return false;
+    }
   };
 
   useEffect(() => {

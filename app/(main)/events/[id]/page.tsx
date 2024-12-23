@@ -23,6 +23,17 @@ import FallbackLoading from "@/components/Loading";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { joinEvent } from "@/actions/userEventAction";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 type EventType = {
   id: string;
@@ -50,18 +61,25 @@ type EventType = {
 
 export default function Page({ params }: { params: { id: string } }) {
   const [events, setEvents] = useState<EventType>();
+  const [amountTicket, setAmountTicket] = useState(0);
   const getEventDetail = async () => {
     const data = await getEventById(params.id);
     console.log(data);
     setEvents(data);
   };
 
-  const handleJoinEvent = async (
-    event_id: string,
-    price: number,
-    link_group: string
-  ) => {
-    const req = await joinEvent(event_id, price, link_group);
+  const handlebuyTicket = async () => {
+    if (amountTicket <= 0) {
+      toast.error("Ticket harus minimal 1");
+      return false;
+    }
+
+    if (!events) {
+      toast.error("Tidak ada event yang tersedia!");
+      return false;
+    }
+
+    const req = await joinEvent(events.id);
 
     if (req) {
       toast.success("Berhasil mengikuti!");
@@ -129,18 +147,37 @@ export default function Page({ params }: { params: { id: string } }) {
                   >
                     Ruang Diskusi
                   </Link>
-                  <Button
-                    onClick={() =>
-                      handleJoinEvent(
-                        events.id,
-                        events.price,
-                        events.link_group
-                      )
-                    }
-                    disabled={events.is_join}
-                  >
-                    {events.is_join ? "Event Diikuti" : "Ikuti Event"}
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>Beli Tiket</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Pembelian Tiket</DialogTitle>
+                        <DialogDescription>
+                          Masukkan jumlah tiket yang diinginkan.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">
+                            Tiket
+                          </Label>
+                          <Input
+                            id="name"
+                            type="number"
+                            className="col-span-3"
+                            onChange={(e) =>
+                              setAmountTicket(Number(e.target.value))
+                            }
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={handlebuyTicket}>Save changes</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </div>
@@ -159,18 +196,6 @@ export default function Page({ params }: { params: { id: string } }) {
                         __html: events?.description ?? "",
                       }}
                     />
-                    <Button
-                      onClick={() =>
-                        handleJoinEvent(
-                          events.id,
-                          events.price,
-                          events.link_group
-                        )
-                      }
-                      disabled={events.is_join}
-                    >
-                      {events.is_join ? "Event Diikuti" : "Ikuti Event"}
-                    </Button>
                   </TabsContent>
                   <TabsContent value="description" className="space-y-4">
                     <h2 className="font-semibold text-3xl">Detail Acara</h2>

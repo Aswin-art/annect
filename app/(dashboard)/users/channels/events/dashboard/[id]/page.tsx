@@ -21,6 +21,7 @@ import { events, users } from "@prisma/client";
 import Link from "next/link";
 import test from "node:test";
 import { useEffect, useState } from "react";
+import { withdrawEventFunds } from "@/lib/web3";
 
 type Tag = {
   name: string;
@@ -61,6 +62,9 @@ export default function Page({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleWithdraw = async () => {
+  };
+
   useEffect(() => {
     getTicket();
   }, []);
@@ -73,12 +77,14 @@ export default function Page({ params }: { params: { id: string } }) {
           </h2>
         </div>
         <div className="flex gap-2">
-          <Button variant={"success"}>With Draw</Button>
+          <Button variant={"success"} onClick={handleWithdraw}>
+            With Draw
+          </Button>
           <Link
             href={`/users/channels/events/update/${params.id}`}
             className={cn(buttonVariants({ variant: "default" }))}
           >
-            Edit Channel
+            Edit Event
           </Link>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">
@@ -111,7 +117,7 @@ export default function Page({ params }: { params: { id: string } }) {
                   </p>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -145,7 +151,7 @@ export default function Page({ params }: { params: { id: string } }) {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
               <div className="col-span-12">
                 <TransactionChart
-                  chartData={dashboardData?.totalEvent   || []}
+                  chartData={dashboardData?.totalEvent || []}
                   title="Bar chart transaksi user"
                   desc="list user transaction"
                 />

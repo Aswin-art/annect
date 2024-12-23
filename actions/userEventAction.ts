@@ -19,11 +19,7 @@ export const getAllData = async () => {
   }
 };
 
-export const joinEvent = async (
-  event_id: string,
-  price: number,
-  link_group: string
-) => {
+export const joinEvent = async (event_id: string) => {
   const user = await currentUser();
 
   if (user) {
@@ -37,31 +33,16 @@ export const joinEvent = async (
         body: JSON.stringify({
           user_id: user.id,
           event_id,
-          status: price > 0 ? false : true,
+          status: true,
         }),
       }
     );
 
     if (req.ok) {
       const res = await req.json();
-
-      if (price > 0) {
-        await sendJoinEventEmail(
-          user.emailAddresses[0].emailAddress,
-          user.firstName,
-          price
-        );
-      } else {
-        await sendPaymentDoneEmail(
-          user.emailAddresses[0].emailAddress,
-          user.firstName,
-          link_group
-        );
-      }
       return res;
     }
   } else {
     redirect("/sign-in");
-    return null;
   }
 };

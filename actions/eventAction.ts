@@ -6,6 +6,7 @@ import {
   sendPaymentProcessEmail,
 } from "@/lib/mail";
 import { currentUser } from "@clerk/nextjs/server";
+import prisma from "@/lib/prisma";
 
 export const getAllData = async (
   nameParams?: string | null,
@@ -332,3 +333,18 @@ export const getDashboardData = async () => {
     return null;
   }
 };
+
+export const cancelEvent = async (id: number ) => {
+  try{
+    await prisma.events.update({
+      where: {
+        id: id
+      },
+      data: {
+        status: "CANCELED"
+      }
+    });
+  }catch(err){
+    console.log(err);
+  }
+}

@@ -40,7 +40,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { tags } from "@prisma/client";
-import { getEventById } from "@/actions/eventAction";
+import { cancelEvent, getEventById } from "@/actions/eventAction";
 import Link from "next/link";
 import FallbackLoading from "@/components/Loading";
 import { ethers } from "ethers";
@@ -224,25 +224,25 @@ export default function Page({ params }: { params: { id: string } }) {
       const weiTimestamp = dateToWei(values.event_date);
 
       const data = {
-        _eventID: 0,
+        _eventID: params.id,
         _newDate: weiTimestamp,
         _newPriceUSD: values.price,
         _newCapacity: values.capacity,
       };
 
-      // const web = await webThree.contract.editEvent(
-      //   data._eventID,
-      //   data._newDate,
-      //   data._newPriceUSD,
-      //   data._newCapacity
-      // );
+      const web = await webThree.contract.editEvent(
+        data._eventID,
+        data._newDate,
+        data._newPriceUSD,
+        data._newCapacity
+      );
 
-      // console.log("web", web);
-      // if (!web.data) {
-      //   console.log("error web data")
-      //   toast.error("Error to create contract!");
-      //   return false;
-      // }
+      console.log("web", web);
+      if (!web.data) {
+        console.log("error web data")
+        toast.error("Error to create contract!");
+        return false;
+      }
 
       await createHandler(values);
     } catch (err) {
@@ -267,7 +267,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
     try {
       const data = {
-        _eventId: 0,
+        _eventId: Number(params.id) - 1,
       };
 
       const web = await webThree.contract.cancelEvent(data._eventId);
@@ -275,7 +275,10 @@ export default function Page({ params }: { params: { id: string } }) {
         toast.error("Error to create contract!");
         return false; 
       }
+
+      await cancelEvent(Number(params.id));
       toast.success("Success!");
+      router.push("/users/channels");
     } catch (err) {
       console.log(err);
       if (err instanceof Error) {
@@ -485,7 +488,7 @@ export default function Page({ params }: { params: { id: string } }) {
                 />
               </div>
               <div className="">
-                  <Button type="submit" variant={`destructive`} disabled={isLoading}>
+                  <Button type="button" variant={`destructive`} disabled={isLoading} onClick={handleCancel}>
                     Cancel Event
                   </Button>
               </div>

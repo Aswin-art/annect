@@ -227,7 +227,7 @@ export default function Page() {
                           <Tag className="w-4 h-4" />
                           <p className="text-xs">
                             {item.events.is_paid
-                              ? formatPrice(item.events.price)
+                              ? formatPrice(item.events.price, "USD")
                               : "Gratis"}
                           </p>
                         </div>
@@ -460,7 +460,7 @@ export default function Page() {
                           <Tag className="w-4 h-4" />
                           <p className="text-xs">
                             {item.events.is_paid
-                              ? formatPrice(item.events.price)
+                              ? formatPrice(item.events.price, "USD")
                               : "Gratis"}
                           </p>
                         </div>

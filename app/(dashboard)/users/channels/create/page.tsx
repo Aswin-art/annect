@@ -47,7 +47,7 @@ const formSchema = z.object({
   email: z.string().min(2, {
     message: "Email must be exists.",
   }),
-  nik: z.coerce.number({
+  nik: z.coerce.string({
     message: "NIK must be exists.",
   }),
   ktp_photo: z.string().min(2, {

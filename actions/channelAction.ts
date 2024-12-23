@@ -81,7 +81,7 @@ type createValue = {
   description: string;
   image: string;
   email: string;
-  nik: number;
+  nik: string;
   ktp_photo: string;
   phone: string;
   user_id?: string;

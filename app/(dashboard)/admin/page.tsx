@@ -236,7 +236,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatPrice(dashboardData?.totalIncome)}
+                    {formatPrice(dashboardData?.totalIncome, "USD")}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
@@ -340,9 +340,7 @@ export default function Page() {
               <Card className="col-span-4 md:col-span-3">
                 <CardHeader>
                   <CardTitle>Last Transaction</CardTitle>
-                  <CardDescription>
-                    Last 5 transaction
-                  </CardDescription>
+                  <CardDescription>Last 5 transaction</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {dashboardData?.transaction && (

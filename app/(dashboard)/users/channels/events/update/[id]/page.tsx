@@ -181,7 +181,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
       if (req.ok) {
         toast.success("Success!");
-        router.push("/user/chanels");
+        router.push("/users/channels");
       } else {
         const errorData = await req.json();
         toast.error(`Failed! ${errorData.message || "Unknown error"}`);
@@ -244,8 +244,6 @@ export default function Page({ params }: { params: { id: string } }) {
       }
 
       await createHandler(values);
-      toast.success("Success!");
-      router.push("/users/channels");
     } catch (err) {
       console.log("masuk")
       console.log(err);

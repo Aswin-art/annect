@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { sendChannelCreatedEmail, sendChannelValidatedEmail } from "@/lib/mail";
 import { currentUser } from "@clerk/nextjs/server";
 
-export const getAllData = async (name: string | null) => {
+export const getAllData = async (name?: string | null) => {
   try {
     let user = await currentUser();
     let req;

@@ -10,15 +10,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { events, users } from "@prisma/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getEventAnalytic } from "@/actions/eventAction";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { UserTable } from "@/components/tables/admin/user-tables/table";
-import { getAllData } from "@/actions/userActions";
 import { MemberTable } from "@/components/tables/user/member-tables/table";
 import toast from "react-hot-toast";
+import { addWithdrawRequest } from "@/actions/withdrawAction";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [dashboardData, setDashboard] = useState<any>();
@@ -28,8 +26,18 @@ export default function Page({ params }: { params: { id: string } }) {
     setDashboard(data);
   };
 
-  const handleWithdraw = async () => {
-    toast.error("Tidak bisa withdraw");
+  const handleWithdraw = async (event_id: string) => {
+    if (dashboardData.event.status !== "DONE") {
+      toast.error("Tunggu sampai event selesai!");
+    }
+
+    const req = await addWithdrawRequest(event_id, dashboardData?.totalIncome);
+
+    if (req) {
+      toast.success("Permintaan withdraw berhasil dibuat!");
+    } else {
+      toast.error("Netwrok Error!");
+    }
   };
 
   useEffect(() => {
@@ -53,7 +61,9 @@ export default function Page({ params }: { params: { id: string } }) {
           </h2>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleWithdraw}>Withdraw Pendapatan</Button>
+          <Button onClick={() => handleWithdraw(dashboardData.event.id)}>
+            Withdraw Pendapatan
+          </Button>
           <Link
             href={`/users/channels/events/update/${params.id}`}
             className={cn(

@@ -11,7 +11,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Bookmark, CornerUpRight, GraduationCap } from "lucide-react";
+import {
+  Bookmark,
+  CornerUpRight,
+  GraduationCap,
+  TriangleAlert,
+} from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -27,6 +32,28 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
 import { eventPaymentDone, joinEvent } from "@/actions/userEventAction";
+import {
+  TwitterIcon,
+  TwitterShareButton,
+  WhatsappIcon,
+  WhatsappShareButton,
+  RedditIcon,
+  RedditShareButton,
+  LineIcon,
+  LineShareButton,
+} from "react-share";
+import { addFavorite } from "@/actions/favoriteAction";
+import { addReport } from "@/actions/reportAction";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type EventType = {
   id: string;
@@ -38,11 +65,16 @@ type EventType = {
   price: number;
   is_join: boolean;
   link_group: string;
+  website_url: string;
   channels: {
     id: string;
     name: string;
     image: string;
     phone: string;
+    users: {
+      email: string;
+      image: string;
+    };
   };
   similar_event?: Array<{
     id: string;
@@ -61,7 +93,10 @@ declare global {
 export default function Page({ params }: { params: { id: string } }) {
   const { user } = useUser();
   const [events, setEvents] = useState<EventType>();
+  const [reportDescription, setReportDescription] = useState("");
+  const [isOpenReportDialog, setIsOpenReportDialog] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
   const getEventDetail = async () => {
     const data = await getEventById(params.id);
     setEvents(data);
@@ -151,8 +186,35 @@ export default function Page({ params }: { params: { id: string } }) {
     }
   };
 
-  const handleFavorite = async () => {
-    toast.success("Berhasil disimpan!");
+  const handleFavorite = async (eventId: string) => {
+    const result = await addFavorite(eventId);
+
+    if (result) {
+      toast.success("Berhasil");
+      await getEventDetail();
+    } else {
+      toast.error("Gagal");
+    }
+  };
+
+  const handleReport = async (eventId: string) => {
+    setReportLoading(true);
+    if (!reportDescription || reportDescription === "") {
+      toast.error("Harap isi deskripsi report!");
+      setIsOpenReportDialog(false);
+      setReportLoading(false);
+      return;
+    }
+
+    const req = await addReport(eventId, reportDescription);
+
+    if (req) {
+      toast.success("Report berhasil dibuat!");
+      setReportDescription("");
+    }
+
+    setIsOpenReportDialog(false);
+    setReportLoading(false);
   };
 
   useEffect(() => {
@@ -179,7 +241,7 @@ export default function Page({ params }: { params: { id: string } }) {
                   <div className="relative w-20 h-20">
                     <Image
                       src={
-                        events?.channels.image ??
+                        events?.channels.users.image ??
                         "https://github.com/shadcn.png"
                       }
                       fill
@@ -253,24 +315,99 @@ export default function Page({ params }: { params: { id: string } }) {
                         __html: events?.description ?? "",
                       }}
                     />
-                    {!events.is_join && (
-                      <Button
-                        onClick={() =>
-                          handleJoinEvent(
-                            events.id,
-                            events.price,
-                            events.link_group
-                          )
-                        }
-                        disabled={loading}
-                      >
-                        {loading ? "Loading..." : "Ikuti Event"}
-                      </Button>
-                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2">
+                      <div className="flex gap-4">
+                        <div>
+                          <TwitterShareButton
+                            url={window.location.href}
+                            title="Ayo ikut event ini bersamaku!"
+                          >
+                            <TwitterIcon size={32} round={true} />
+                          </TwitterShareButton>
+                        </div>
+                        <div>
+                          <LineShareButton
+                            url={window.location.href}
+                            title="Ayo ikut event ini bersamaku!"
+                          >
+                            <LineIcon size={32} round={true} />
+                          </LineShareButton>
+                        </div>
+                        <div>
+                          <WhatsappShareButton
+                            url={window.location.href}
+                            title="Ayo ikut event ini bersamaku!"
+                          >
+                            <WhatsappIcon size={32} round={true} />
+                          </WhatsappShareButton>
+                        </div>
+                        <div>
+                          <RedditShareButton
+                            url={window.location.href}
+                            title="Ayo ikut event ini bersamaku!"
+                          >
+                            <RedditIcon size={32} round={true} />
+                          </RedditShareButton>
+                        </div>
+                      </div>
+                      <div className="flex gap-4 w-full justify-end">
+                        <Dialog open={isOpenReportDialog}>
+                          <Button
+                            onClick={() => setIsOpenReportDialog(true)}
+                            variant={"destructive"}
+                          >
+                            <TriangleAlert /> Report Event
+                          </Button>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle>Laporan Event</DialogTitle>
+                              <DialogDescription>
+                                Laporkan event jika ditemukan indikasi
+                                kecurangan yang dilakukan oleh penyelenggara.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <Label htmlFor="name">Deskripsi Laporan</Label>
+                              <Textarea
+                                id="name"
+                                value={reportDescription}
+                                onChange={(e) =>
+                                  setReportDescription(e.target.value)
+                                }
+                                placeholder="Tulis deskripsi dari laporanmu...."
+                                disabled={reportLoading}
+                              />
+                            </div>
+                            <DialogFooter>
+                              <div className="flex gap-2">
+                                <Button
+                                  type="button"
+                                  variant={"secondary"}
+                                  onClick={() => setIsOpenReportDialog(false)}
+                                >
+                                  Close
+                                </Button>
+                                <Button
+                                  type="submit"
+                                  disabled={reportLoading}
+                                  onClick={() => handleReport(events.id)}
+                                >
+                                  {reportLoading ? "Loading..." : "Submit"}
+                                </Button>
+                              </div>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
                   </TabsContent>
                   <TabsContent value="description" className="space-y-4">
                     <h2 className="font-semibold text-3xl">Detail Acara</h2>
-                    <p>Tanggal Pelaksanaan: {formatDate(events?.event_date)}</p>
+                    <p>
+                      Tanggal Pelaksanaan:{" "}
+                      {formatDate(events?.event_date, true)}
+                    </p>
                     <p>Lokasi Acara: {events?.location}</p>
                     <p>
                       Harga Acara:{" "}
@@ -307,7 +444,18 @@ export default function Page({ params }: { params: { id: string } }) {
                           </div>
                           <div>
                             <h5>Alamat Email</h5>
-                            <p className="font-semibold">example.emaildotcom</p>
+                            <p className="font-semibold">
+                              {events.channels.users.email}
+                            </p>
+                          </div>
+                          <div>
+                            <Link
+                              href={events.website_url}
+                              target="_blank"
+                              className="underline text-primary text-md"
+                            >
+                              Kunjungi Halaman Website / Sosial Media
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -380,17 +528,6 @@ export default function Page({ params }: { params: { id: string } }) {
                             {event.name}
                           </Link>
                         </CardTitle>
-                        {/* <CardDescription className="max-w-lg">
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: event.description
-                                ? event.description.length > 100
-                                  ? `${event.description.slice(0, 100)}...`
-                                  : event.description
-                                : "",
-                            }}
-                          />
-                        </CardDescription> */}
                       </CardHeader>
                       <CardFooter>
                         <div className="flex gap-2 ms-auto">
@@ -404,7 +541,7 @@ export default function Page({ params }: { params: { id: string } }) {
                           </Link>
                           <Button
                             variant={"ghost"}
-                            onClick={handleFavorite}
+                            onClick={() => handleFavorite(event.id)}
                             className="hover:text-white text-primary hover:bg-primary transition-all duration-200"
                           >
                             <Bookmark />

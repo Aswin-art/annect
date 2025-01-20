@@ -1,5 +1,5 @@
 "use client";
-import { getAllData } from "@/actions/followAction";
+import { followChannel, getAllData } from "@/actions/followAction";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -54,14 +54,23 @@ type FollowType = {
 export default function Page() {
   const [followings, setFollowings] = useState<FollowType[]>();
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingFollow, setLoadingFollow] = useState<boolean>(false);
   const getData = async () => {
     const req = await getAllData();
     setFollowings(req);
     setLoading(false);
   };
 
-  const handleFollow = async () => {
-    toast.success("Berhasil ditambahkan!");
+  const toggleFollow = async (channel_id: string) => {
+    setLoadingFollow(true);
+    const req = await followChannel(channel_id);
+    if (req) {
+      toast.success("Berhasil!");
+      await getData();
+    } else {
+      toast.error("Network Error!");
+    }
+    setLoadingFollow(false);
   };
 
   useEffect(() => {
@@ -151,14 +160,15 @@ export default function Page() {
                           <TooltipTrigger asChild>
                             <Button
                               variant={"ghost"}
-                              onClick={handleFollow}
-                              className="text-red-500 hover:text-white hover:bg-red-500"
+                              onClick={() => toggleFollow(item.channels.id)}
+                              disabled={loadingFollow}
+                              className="bg-red-500 text-white"
                             >
                               <Heart />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Ikuti Channel</p>
+                            <p>Berhenti Mengikuti</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

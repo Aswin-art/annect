@@ -1,3 +1,4 @@
+"use server";
 import { Resend } from "resend";
 import EventCreatedEmail from "@/emails/create-event";
 import WelcomeEmail from "@/emails/welcome";
@@ -9,6 +10,9 @@ import { getAllDataFollowers } from "@/actions/followAction";
 import BroadcastEmail from "@/emails/broadcast";
 import { currentUser } from "@clerk/nextjs/server";
 import PaymentProcessEmail from "@/emails/payment-process";
+import { getAllDataMember, getDetailData } from "@/actions/userEventAction";
+import MemberBroadcastEmail from "@/emails/member-broadcast";
+import { findUser } from "@/actions/userActions";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const domain = process.env.NEXT_PUBLIC_APP_URL;
@@ -93,7 +97,7 @@ export const sendChannelCreatedEmail = async (
     await resend.emails.send({
       from: "Annect <marketing@awsd-qwerty.com>",
       to: email,
-      subject: "Event Anda Berhasil Diunggah di Annect! 🎉",
+      subject: "Channel Anda Berhasil Dibuat! 🎉",
       react: ChannelCreatedEmail({ userFirstname: name }),
     });
   } catch (err) {
@@ -109,7 +113,7 @@ export const sendChannelValidatedEmail = async (
     await resend.emails.send({
       from: "Annect <marketing@awsd-qwerty.com>",
       to: email,
-      subject: "Event Anda Berhasil Diunggah di Annect! 🎉",
+      subject: "Channel Telah Divalidasi! 🎉",
       react: ChannelValidatedEmail({ userFirstname: name }),
     });
   } catch (err) {
@@ -189,19 +193,67 @@ export const sendBroadcastEmail = async (channel_id: string) => {
   try {
     const followers: FollowerType[] = await getAllDataFollowers(channel_id);
 
-    await Promise.all(
-      followers.map(async (item) => {
-        await resend.emails.send({
-          from: "Annect <marketing@awsd-qwerty.com>",
-          to: item.users.email,
-          subject: "Event baru telah dibuat!",
-          react: BroadcastEmail({
-            userFirstname: item.users.name,
-            channel_id: channel_id,
-          }),
-        });
-      })
-    );
+    const emails = followers.map((item) => ({
+      from: "Annect <marketing@awsd-qwerty.com>",
+      to: item.users.email,
+      subject: "Event baru telah dibuat!",
+      react: BroadcastEmail({
+        userFirstname: item.users.name,
+        channel_id: channel_id,
+      }),
+    }));
+
+    await resend.batch.send(emails);
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const sendMemberBroadcast = async (
+  event_id: string,
+  title: string,
+  content: string
+) => {
+  try {
+    const members: any[] = await getAllDataMember(event_id);
+
+    const emails = members.map((item) => ({
+      from: "Annect <marketing@awsd-qwerty.com>",
+      to: item.users.email,
+      subject: title,
+      react: MemberBroadcastEmail({
+        content,
+      }),
+    }));
+
+    await resend.batch.send(emails);
+
+    return true;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const sendMemberEmail = async (
+  userEventId: string,
+  title: string,
+  content: string
+) => {
+  try {
+    const userEvent = await getDetailData(userEventId);
+
+    if (!userEvent) return null;
+
+    await resend.emails.send({
+      from: "Annect <marketing@awsd-qwerty.com>",
+      to: userEvent.users.email,
+      subject: title,
+      react: MemberBroadcastEmail({ content }),
+    });
+
+    return true;
   } catch (err) {
     console.log(err);
     return null;

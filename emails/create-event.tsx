@@ -53,15 +53,6 @@ export const EventCreatedEmail = ({
           Annect.
         </Text>
         <Text style={paragraph}>
-          <strong>Informasi Rekening Pembayaran:</strong>
-          <br />
-          Bank: <strong>BCA</strong>
-          <br />
-          Nomor Rekening: <strong>2737423456</strong>
-          <br />
-          Atas Nama: <strong>Annect Head Officer</strong>
-        </Text>
-        <Text style={paragraph}>
           Best,
           <br />
           The Annect team

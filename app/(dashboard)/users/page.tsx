@@ -51,6 +51,8 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import FileUpload from "@/components/FileUpload";
 import { updateUserEvent } from "@/actions/eventAction";
+import { followChannel } from "@/actions/followAction";
+import { addFavorite } from "@/actions/favoriteAction";
 
 type EventType = {
   id: string;
@@ -110,18 +112,37 @@ export default function Page() {
     favorites: [],
   });
   const [paymentImage, setPaymentImage] = useState<string | undefined>("");
+  const [loading, setLoading] = useState(false);
 
   const getDashboardData = async () => {
     const dashboardData = await getUserDashboardData();
     setDashboard(dashboardData);
   };
 
-  const handleFollow = async () => {
-    toast.success("Berhasil ditambahkan!");
+  const toggleFollow = async (channel_id: string) => {
+    setLoading(true);
+    const req = await followChannel(channel_id);
+    if (req) {
+      toast.success("Berhasil!");
+      await getDashboardData();
+    } else {
+      toast.error("Network Error!");
+    }
+    setLoading(false);
   };
 
-  const handleFavorite = async () => {
-    toast.success("Berhasil disimpan!");
+  const toggleFavorite = async (event_id: string) => {
+    setLoading(true);
+    const req = await addFavorite(event_id);
+
+    if (req) {
+      toast.success("Berhasil!");
+      await getDashboardData();
+    } else {
+      toast.error("Network Error!");
+    }
+
+    setLoading(false);
   };
 
   const handleUpdatePayment = async (
@@ -401,8 +422,9 @@ export default function Page() {
                           <TooltipTrigger asChild>
                             <Button
                               variant={"ghost"}
-                              onClick={handleFollow}
-                              className="text-red-500 hover:text-white hover:bg-red-500"
+                              disabled={loading}
+                              onClick={() => toggleFollow(item.channels.id)}
+                              className="bg-red-500 text-white"
                             >
                               <Heart />
                             </Button>
@@ -523,8 +545,9 @@ export default function Page() {
                           <TooltipTrigger asChild>
                             <Button
                               variant={"ghost"}
-                              onClick={handleFavorite}
-                              className="hover:text-white text-primary hover:bg-primary transition-all duration-200"
+                              disabled={loading}
+                              onClick={() => toggleFavorite(item.events.id)}
+                              className="transition-all duration-200 bg-primary text-white"
                             >
                               <Bookmark />
                             </Button>

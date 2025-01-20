@@ -3,6 +3,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { CellAction } from "./cell-action";
 import { Checkbox } from "@/components/ui/checkbox";
 import { channels } from "@prisma/client";
+import Image from "next/image";
 
 export const columns: ColumnDef<channels>[] = [
   {
@@ -25,12 +26,33 @@ export const columns: ColumnDef<channels>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "image",
+    header: "CHANNEL BACKGROUND",
+    cell: ({ row }) => (
+      <Image
+        src={row.original.image ?? ""}
+        width={100}
+        height={100}
+        alt="image-background"
+        className="object-cover rounded-md"
+      />
+    ),
+  },
+  {
     accessorKey: "users.name",
-    header: "CREATED BY",
+    header: "CREATOR",
+  },
+  {
+    accessorKey: "users.email",
+    header: "CREATOR EMAIL",
+  },
+  {
+    accessorKey: "phone",
+    header: "PHONE",
   },
   {
     accessorKey: "name",
-    header: "NAME",
+    header: "CHANNEL NAME",
   },
   {
     accessorKey: "status",

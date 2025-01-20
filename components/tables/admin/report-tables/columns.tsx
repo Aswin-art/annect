@@ -1,9 +1,6 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { CellAction } from "./cell-action";
 import { Checkbox } from "@/components/ui/checkbox";
-import Link from "next/link";
-import { formatDate, formatPrice } from "@/lib/format";
 import Image from "next/image";
 
 export const columns: ColumnDef<any>[] = [
@@ -28,47 +25,36 @@ export const columns: ColumnDef<any>[] = [
   },
   {
     accessorKey: "events.image",
-    header: "EVENT IMAGE",
+    header: "EVENT PHOTO",
     cell: ({ row }) => (
       <Image
-        src={row.original.events.image}
+        src={row.original.events.image ?? ""}
         width={100}
         height={100}
-        alt="event-image"
+        alt="image-background"
         className="object-cover rounded-md"
       />
     ),
   },
   {
-    accessorKey: "events.name",
-    header: "EVENT",
+    accessorFn: (row) => row.events.name,
+    accessorKey: "name",
+    header: "EVENT NAME",
   },
   {
     accessorKey: "users.email",
-    header: "EMAIL USER",
+    header: "USER EMAIL",
   },
   {
-    accessorKey: "amount",
-    header: "PRICE",
-    cell: ({ row }) => (
-      <span>
-        {row.original.events.price > 0
-          ? formatPrice(row.original.events.price)
-          : "Gratis"}
-      </span>
-    ),
+    accessorKey: "users.name",
+    header: "USER NAME",
+  },
+  {
+    accessorKey: "description",
+    header: "DESCRIPTION",
   },
   {
     accessorKey: "created_at",
-    header: "WITHDRAW DATE",
-    cell: ({ row }) => <span>{formatDate(row.original.created_at)}</span>,
-  },
-  {
-    accessorKey: "status",
-    header: "STATUS",
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => <CellAction data={row.original} />,
+    header: "REPORT DATE",
   },
 ];

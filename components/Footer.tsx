@@ -10,7 +10,7 @@ const Footer = (props: Props) => {
       <div className="mt-40">
         <Separator />
         <div className="my-5 text-center text-muted-foreground">
-          &copy; {new Date().getFullYear()} | All rights reserved
+          &copy; {new Date().getFullYear()} Annect | All rights reserved
         </div>
       </div>
     </Wrapper>

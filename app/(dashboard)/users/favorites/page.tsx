@@ -1,5 +1,5 @@
 "use client";
-import { getAllData } from "@/actions/favoriteAction";
+import { addFavorite, getAllData } from "@/actions/favoriteAction";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -63,14 +63,25 @@ type FavoriteType = {
 export default function Page() {
   const [favorites, setFavorites] = useState<FavoriteType[]>();
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingFavorite, setLoadingFavorite] = useState<boolean>(false);
   const getData = async () => {
     const req = await getAllData();
     setFavorites(req);
     setLoading(false);
   };
 
-  const handleFavorite = async () => {
-    toast.success("Berhasil disimpan!");
+  const toggleFavorite = async (event_id: string) => {
+    setLoadingFavorite(true);
+    const req = await addFavorite(event_id);
+
+    if (req) {
+      toast.success("Berhasil!");
+      await getData();
+    } else {
+      toast.error("Network Error!");
+    }
+
+    setLoadingFavorite(false);
   };
 
   useEffect(() => {
@@ -184,14 +195,15 @@ export default function Page() {
                             <TooltipTrigger asChild>
                               <Button
                                 variant={"ghost"}
-                                onClick={handleFavorite}
-                                className="hover:text-white text-primary hover:bg-primary transition-all duration-200"
+                                disabled={loadingFavorite}
+                                onClick={() => toggleFavorite(item.events.id)}
+                                className="transition-all duration-200 bg-primary text-white"
                               >
                                 <Bookmark />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Simpan Event</p>
+                              <p>Hapus Favorite</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

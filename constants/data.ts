@@ -122,10 +122,16 @@ export const adminNavItems: NavItem[] = [
     label: "event",
   },
   {
-    title: "User Payment",
+    title: "Report",
+    href: "/admin/reports",
+    icon: "warning",
+    label: "report",
+  },
+  {
+    title: "Withdraw Request",
     href: "/admin/payments",
     icon: "billing",
-    label: "user payment",
+    label: "withdraw request",
   },
 ];
 

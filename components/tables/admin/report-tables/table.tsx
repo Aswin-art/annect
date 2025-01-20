@@ -8,17 +8,17 @@ interface ProductsClientProps {
   data: any[];
 }
 
-export const PaymentTable: React.FC<ProductsClientProps> = ({ data }) => {
+export const ReportTable: React.FC<ProductsClientProps> = ({ data }) => {
   return (
     <>
       <div className="flex items-start justify-between">
         <Heading
-          title={`Withdraw Request (${data.length})`}
-          description="Kelola data permintaan withdraw."
+          title={`Reports (${data.length})`}
+          description="Kelola data laporan"
         />
       </div>
       <Separator />
-      <DataTable searchKey="email" columns={columns} data={data} />
+      <DataTable searchKey="name" columns={columns} data={data} />
     </>
   );
 };

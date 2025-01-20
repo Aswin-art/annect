@@ -52,7 +52,12 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function PieGraph() {
+type Tag = {
+  name: string;
+  totalData: number;
+};
+
+export function PieGraph(data: Tag[] | any) {
   const totalVisitors = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.visitors, 0);
   }, []);

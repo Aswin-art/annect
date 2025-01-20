@@ -16,9 +16,7 @@ export default function Sidebar({ className }: SidebarProps) {
   const { isMinimized, toggle } = useSidebar();
   const [status, setStatus] = useState(false);
   const { user } = useUser();
-  const isAdmin =
-    user?.emailAddresses[0].emailAddress ===
-    "22081010099@student.upnjatim.ac.id";
+  const isAdmin = user?.id === process.env.NEXT_PUBLIC_CLERK_ADMIN_USER_ID;
 
   const handleToggle = () => {
     setStatus(true);

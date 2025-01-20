@@ -32,19 +32,18 @@ type TransactionType = {
 };
 
 type Dashboard = {
-  userCount: number;
-  eventCount: number;
-  channelCount: number;
-  totalprice: number | null;
-  transaction: TransactionType[];
-  tagsWithEventCount: Tag[];
-};
+  totalChannel: number;
+  totalUser: number;
+  totalEvent: number;
+  totalRevenue: number;
+  latest_transactions: TransactionType[];
+  tagCounts: Tag[];
+} | null;
 
 export default function Page() {
   const [dashboard, setDashboard] = useState<Dashboard>();
   const getData = async () => {
     const data = await getDashboardData();
-    console.log(data);
     setDashboard(data);
   };
   useEffect(() => {
@@ -87,7 +86,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatPrice(dashboard?.totalprice || 0)}
+                    {formatPrice(dashboard?.totalRevenue || 0)}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
@@ -116,7 +115,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    +{dashboard?.userCount}
+                    +{dashboard?.totalUser}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
@@ -144,7 +143,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    +{dashboard?.eventCount}
+                    +{dashboard?.totalEvent}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% from last month
@@ -171,7 +170,7 @@ export default function Page() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    +{dashboard?.channelCount}
+                    +{dashboard?.totalChannel}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     +100% since last hour
@@ -187,12 +186,13 @@ export default function Page() {
                 <CardHeader>
                   <CardTitle>Transaksi terakhir</CardTitle>
                   <CardDescription>
-                    Ada sebanyak 10 transaksi di bulan ini.
+                    Ada sebanyak {dashboard?.latest_transactions.length ?? 0}{" "}
+                    transaksi di bulan ini.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {dashboard?.transaction && (
-                    <RecentSales data={dashboard.transaction} />
+                  {dashboard?.latest_transactions && (
+                    <RecentSales data={dashboard.latest_transactions} />
                   )}
                 </CardContent>
               </Card>
@@ -200,7 +200,7 @@ export default function Page() {
                 <AreaGraph />
               </div>
               <div className="col-span-4 md:col-span-3">
-                <PieGraph />
+                <PieGraph data={dashboard?.tagCounts ?? []} />
               </div>
             </div>
           </TabsContent>

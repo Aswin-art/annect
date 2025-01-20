@@ -10,7 +10,8 @@ export function formatPrice(number: number | undefined | null) {
 }
 
 export function formatDate(
-  date: string | Date | null | undefined
+  date: string | Date | null | undefined,
+  withTime: boolean = false
 ): string | undefined {
   if (!date) return undefined;
 
@@ -20,10 +21,12 @@ export function formatDate(
     return undefined;
   }
 
-  const options = {
+  const options: Intl.DateTimeFormatOptions = {
     day: "numeric",
     month: "short",
     year: "numeric",
-  } as const;
+    ...(withTime && { hour: "2-digit", minute: "2-digit" }), // Tambahkan opsi waktu jika withTime true
+  };
+
   return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
 }

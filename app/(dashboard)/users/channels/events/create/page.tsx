@@ -75,6 +75,9 @@ const formSchema = z.object({
   link_group: z.string().min(2, {
     message: "link must be exists.",
   }),
+  website_url: z.string().min(2, {
+    message: "website url must be exists.",
+  }),
   price: z.coerce.number().min(0),
   post_duration: z.coerce.number().min(0),
   event_date: z.date(),
@@ -123,7 +126,7 @@ export default function Page() {
       values.price = 0;
     }
     if (values.is_online == true) {
-      values.location = "ONLINE";
+      values.location = "Online";
     }
     const create = await createEvents(values);
 
@@ -351,6 +354,21 @@ export default function Page() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Link Grub Event</FormLabel>
+                    <FormControl>
+                      <Input disabled={isLoading} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="website_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link Website / Sosial Media</FormLabel>
                     <FormControl>
                       <Input disabled={isLoading} {...field} />
                     </FormControl>

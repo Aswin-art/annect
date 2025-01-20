@@ -7,16 +7,25 @@ import { redirect } from "next/navigation";
 
 export const getAllData = async () => {
   try {
-    const req = await fetch(
-      process.env.NEXT_PUBLIC_API_BASE_URL + "/user_events"
-    );
-
-    if (req.ok) {
-      const res = await req.json();
-      return res;
-    }
+    const data = await db.withdraw_requests.findMany({
+      include: {
+        users: {
+          select: {
+            email: true,
+          },
+        },
+        events: {
+          select: {
+            name: true,
+            image: true,
+          },
+        },
+      },
+    });
+    return data;
   } catch (err) {
     console.log(err);
+    return [];
   }
 };
 
@@ -113,6 +122,42 @@ export const eventPaymentDone = async (event_id: string) => {
     );
 
     return true;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const getAllDataMember = async (event_id: string) => {
+  try {
+    const members = await db.user_events.findMany({
+      where: {
+        event_id,
+      },
+      include: {
+        users: true,
+      },
+    });
+
+    return members;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};
+
+export const getDetailData = async (id: string) => {
+  try {
+    const data = await db.user_events.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        users: true,
+      },
+    });
+
+    return data;
   } catch (err) {
     console.log(err);
     return null;

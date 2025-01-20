@@ -2,7 +2,7 @@
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,6 +23,9 @@ import { useForm } from "react-hook-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TextareaAutosize from "react-textarea-autosize";
 import dynamic from "next/dynamic";
+import { sendMemberBroadcast } from "@/lib/mail";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 const EditableEditor = dynamic(() => import("@/components/EditableEditor"), {
   ssr: false,
 });
@@ -47,22 +50,37 @@ export default function Page() {
     resolver: zodResolver(formSchema),
   });
 
+  const { id } = useParams();
+
+  const pathname = usePathname();
   const router = useRouter();
+  const backUrl = pathname.replace(/\/broadcast$/, "");
 
   const isLoading = form.formState.isSubmitting;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values);
+    const broadcast = await sendMemberBroadcast(
+      id as string,
+      values.title,
+      values.description
+    );
+
+    if (broadcast) {
+      toast.success("Broadcast email berhasil dikirim!");
+      router.push(backUrl);
+    } else {
+      toast.error("Network Error!");
+    }
   };
 
   return (
     <ScrollArea className="h-full">
-      <div className="flex-1 space-y-4  p-4 pt-6 md:p-8">
+      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <Breadcrumbs items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
           <Heading
-            title={`Buat Channel Baru`}
+            title={`Buat Broadcast Member`}
             description="Lengkapi form untuk melakukan broadcasting kepada seluruh member event!"
           />
         </div>
@@ -109,15 +127,15 @@ export default function Page() {
                   )}
                 />
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => router.back()}
-                    type="button"
-                    disabled={isLoading}
-                    variant={"secondary"}
-                    className="hover:text-primary"
+                  <Link
+                    className={cn(
+                      buttonVariants({ variant: "secondary" }),
+                      "hover:text-primary"
+                    )}
+                    href={backUrl}
                   >
                     Kembali
-                  </Button>
+                  </Link>
                   <Button type="submit" disabled={isLoading}>
                     {isLoading ? "Loading..." : "Submit"}
                   </Button>
@@ -127,7 +145,7 @@ export default function Page() {
           </div>
           <div className="col-span-8">
             <Separator className="rotate-90 origin-left" />
-            <div className="ms-2">
+            <div className="ms-8">
               <div className="mt-5">
                 <TextareaAutosize
                   placeholder="Judul Email...."

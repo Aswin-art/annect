@@ -42,7 +42,10 @@ const formSchema = z.object({
     message: "Description must be at least 2 characters.",
   }),
   image: z.string().min(2, {
-    message: "Image must be exists.",
+    message: "Background must be exists.",
+  }),
+  ktp_photo: z.string().min(2, {
+    message: "KTP must be exists.",
   }),
   nik: z.string().min(2, {
     message: "NIK must be exists.",
@@ -90,23 +93,42 @@ export default function Page() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Background Channel</FormLabel>
-                  <FormControl>
-                    <FileUpload
-                      apiEndpoint="image"
-                      onChange={field.onChange}
-                      value={field.value}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Background Channel</FormLabel>
+                    <FormControl>
+                      <FileUpload
+                        apiEndpoint="image"
+                        onChange={field.onChange}
+                        value={field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="ktp_photo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Foto KTP</FormLabel>
+                    <FormControl>
+                      <FileUpload
+                        apiEndpoint="image"
+                        onChange={field.onChange}
+                        value={field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="name"

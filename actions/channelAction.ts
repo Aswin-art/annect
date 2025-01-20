@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { sendChannelCreatedEmail, sendChannelValidatedEmail } from "@/lib/mail";
 import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export const getAllData = async (name?: string | null) => {
   try {
@@ -31,18 +32,34 @@ export const getAllData = async (name?: string | null) => {
 export const getChannelByUserId = async () => {
   const user = await currentUser();
 
+  if (!user) redirect("/sign-in");
+
   try {
-    const req = await fetch(
-      process.env.NEXT_PUBLIC_API_BASE_URL + "/channels/users/" + user?.id
-    );
+    const channel = await db.channels.findFirst({
+      where: {
+        users: {
+          id: user.id,
+        },
+      },
+      include: {
+        events: {
+          include: {
+            categories: true,
+            tags: true,
+            user_events: true,
+          },
+        },
+        users: true,
+        follows: {
+          include: {
+            users: true,
+          },
+        },
+        _count: true,
+      },
+    });
 
-    if (req.ok) {
-      const res = await req.json();
-
-      return res;
-    }
-
-    return null;
+    return channel;
   } catch (err) {
     console.log(err);
     return null;
@@ -53,6 +70,7 @@ type createValue = {
   name: string;
   description: string;
   image: string;
+  ktp_photo: string;
   user_id?: string;
 };
 
@@ -94,9 +112,12 @@ export const createChannels = async (values: createValue) => {
 
 export const getChannelById = async (channel_id: string) => {
   let user = await currentUser();
+
+  if (!user) return redirect("/sign-in");
+
   try {
     const req = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/channels/${channel_id}/${user?.id}`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/channels/${channel_id}/${user.id}`,
       {
         method: "GET",
       }
@@ -107,6 +128,7 @@ export const getChannelById = async (channel_id: string) => {
     }
 
     const data = await req.json();
+    data.email = data.users.email;
     return data;
   } catch (error) {
     console.error("Error fetching event:", error);

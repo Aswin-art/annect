@@ -22,6 +22,7 @@ interface CellActionProps {
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   const onConfirm = async () => {
     const req = await channelVerification(data.id);
@@ -53,15 +54,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
           <DropdownMenuItem
-            onClick={() => window.open(`/channels/${data.id}`, "_blank")}
+            onClick={() => router.push("/admin/channels/" + data.id)}
           >
-            <Eye className="mr-2 h-4 w-4" /> Lihat Channel
+            <Eye className="mr-2 h-4 w-4" /> Lihat Data
           </DropdownMenuItem>
-          {data.status !== "VERIFIED" && (
-            <DropdownMenuItem onClick={() => setOpen(true)}>
-              <Edit className="mr-2 h-4 w-4" /> Verifikasi Channel
-            </DropdownMenuItem>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

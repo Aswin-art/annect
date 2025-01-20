@@ -8,10 +8,10 @@ import { redirect } from "next/navigation";
 
 type UserData = {
   id: string;
-  name: string | null;
+  name: string;
   email: string;
   image: string;
-  role: users_role | undefined;
+  role: users_role;
 };
 
 const insertUser = async ({ id, name, email, image, role }: UserData) => {
@@ -30,14 +30,18 @@ const insertUser = async ({ id, name, email, image, role }: UserData) => {
   }
 };
 
-export const checkUser = async () => {
+export const checkUser = async (
+  id: string,
+  name: string,
+  email: string,
+  image: string
+) => {
   const user = await currentUser();
-
-  if (!user) return null;
+  const client = await clerkClient();
 
   const getUserFromDB = await db.users.findUnique({
     where: {
-      id: user.id,
+      id,
     },
   });
 
@@ -45,25 +49,24 @@ export const checkUser = async () => {
     let role: users_role = "USER";
 
     if (
-      user.emailAddresses &&
-      user.emailAddresses.length > 0 &&
-      user.emailAddresses[0].emailAddress ===
-        "22081010099@student.upnjatim.ac.id"
+      email &&
+      email.length > 0 &&
+      email === "22081010099@student.upnjatim.ac.id"
     ) {
       role = "ADMIN";
     }
 
-    await clerkClient.users.updateUserMetadata(user.id, {
+    await client.users.updateUserMetadata(id, {
       privateMetadata: {
         role,
       },
     });
 
     const data: UserData = {
-      id: user.id,
-      name: user.fullName,
-      email: user.emailAddresses[0]?.emailAddress,
-      image: user.imageUrl,
+      id,
+      name,
+      email,
+      image,
       role,
     };
 
@@ -113,5 +116,35 @@ export const getUserDashboardData = async () => {
     }
   } catch (err) {
     console.log(err);
+  }
+};
+
+export const findUser = async (id: string) => {
+  try {
+    const user = await db.users.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    return user;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+};
+
+export const deleteUser = async (id: string) => {
+  try {
+    const user = db.users.delete({
+      where: {
+        id,
+      },
+    });
+
+    return user;
+  } catch (err) {
+    console.log(err);
+    return null;
   }
 };

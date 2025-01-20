@@ -205,8 +205,8 @@ export const createEvents = async (values: createValues) => {
 
         if (req.ok) {
           await sendEventCreatedEmail(
-            user?.emailAddresses[0].emailAddress,
-            user?.firstName,
+            user.emailAddresses[0].emailAddress,
+            user.firstName,
             totalPayment
           );
 
@@ -358,6 +358,7 @@ export const getEventAnalytic = async (event_id: string) => {
       }
 
       const data = {
+        event,
         totalMember: userEvents.length,
         totalIncome: userEvents.length * (event.price ?? 1),
         members: userEvents,

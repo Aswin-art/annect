@@ -208,13 +208,11 @@ export default function Page() {
                           <TooltipTrigger asChild>
                             <Button
                               variant={"ghost"}
-                              onClick={async () =>
-                                await handleFollowChannels(item.id)
-                              }
+                              onClick={() => handleFollowChannels(item.id)}
                               className={
                                 item.is_following === true
                                   ? "bg-red-500 text-white"
-                                  : "text-red-500 hover:text-white hover:bg-red-500"
+                                  : "text-red-500 hover:text-white hover:bg-red-500 border border-red-500"
                               }
                             >
                               <Heart />

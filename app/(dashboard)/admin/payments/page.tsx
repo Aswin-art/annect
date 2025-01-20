@@ -2,24 +2,20 @@
 import { getAllData } from "@/actions/userEventAction";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PaymentTable } from "@/components/tables/admin/payment-tables/table";
-import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
-import { events } from "@prisma/client";
-import { Plus } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const breadcrumbItems = [
   { title: "Dashboard", link: "/admin" },
-  { title: "User Payment", link: "/admin/user-payments" },
+  { title: "Withdraw Request", link: "/admin/user-payments" },
 ];
 
 export default function Page() {
-  const [userPayments, setUserPayments] = useState([]);
+  const [userPayments, setUserPayments] = useState<any>([]);
 
   const getData = async () => {
     const req = await getAllData();
+    console.log(req);
     setUserPayments(req);
   };
 
@@ -33,7 +29,7 @@ export default function Page() {
 
         <Separator />
 
-        <PaymentTable data={userPayments} key={"name"} />
+        <PaymentTable data={userPayments} />
       </div>
     </>
   );

@@ -451,10 +451,8 @@ export default function Page() {
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant={"ghost"}
-                                    onClick={async () =>
-                                      await handleFavorite(event.id)
-                                    }
-                                    className={`hover:text-white hover:bg-primary transition-all duration-200 ${
+                                    onClick={() => handleFavorite(event.id)}
+                                    className={`hover:text-white hover:bg-primary transition-all duration-200 border border-primary ${
                                       event.is_favorite
                                         ? "bg-primary text-white"
                                         : "text-primary"

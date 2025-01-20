@@ -31,6 +31,7 @@ import { Suspense, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { eventPayment } from "@/actions/eventAction";
 import { useUser } from "@clerk/nextjs";
+import EditableEditor from "@/components/EditableEditor";
 
 const breadcrumbItems = [
   { title: "Dashboard", link: "/users" },
@@ -50,7 +51,7 @@ type ChannelUser = {
 
 export default function Page() {
   const { user } = useUser();
-  const [channels, setChannels] = useState<ChannelUser | null>();
+  const [channels, setChannels] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [paymentLoading, setPaymentLoading] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(false);
@@ -212,14 +213,14 @@ export default function Page() {
                     </div>
                   </div>
                   <Separator />
-                  <Tabs defaultValue="events" className="space-y-4">
+                  <Tabs defaultValue="events" className="space-y-4 mt-4">
                     <TabsList>
                       <TabsTrigger value="events">Daftar Event</TabsTrigger>
                       <TabsTrigger value="description">Deskripsi</TabsTrigger>
                     </TabsList>
                     <TabsContent value="events" className="space-y-4">
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        {channels?.events?.map((event, index: number) => (
+                        {channels?.events?.map((event: any, index: number) => (
                           <Card
                             key={index}
                             className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
@@ -312,10 +313,10 @@ export default function Page() {
                       </div>
                     </TabsContent>
                     <TabsContent value="description" className="space-y-4">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: channels?.description || "",
-                        }}
+                      <EditableEditor
+                        onChange={() => {}}
+                        value={channels.description}
+                        editable={false}
                       />
                     </TabsContent>
                   </Tabs>

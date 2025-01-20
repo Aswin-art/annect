@@ -13,8 +13,6 @@ interface ProductsClientProps {
 }
 
 export const ChannelTable: React.FC<ProductsClientProps> = ({ data }) => {
-  const router = useRouter();
-
   return (
     <>
       <div className="flex items-start justify-between">

@@ -55,7 +55,7 @@ export const followChannel = async (channel_id: string) => {
       throw new Error("Failed to follow channel");
     }
 
-    const data = await response.json();
+    await response.json();
     return { message: "success" };
   } catch (error) {
     console.error("Error following channel:", error);

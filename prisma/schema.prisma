@@ -17,47 +17,51 @@ model categories {
 
 model channels {
   id          String          @id @default(cuid())
-  user_id     String?         @db.VarChar(255)
-  name        String?         @db.VarChar(255)
+  user_id     String          @db.VarChar(255)
+  name        String          @db.VarChar(255)
   description String?         @db.LongText
-  image       String?         @db.VarChar(255)
-  nik         String?         @db.VarChar(255)
-  no_rek      String?         @db.VarChar(255)
-  phone       String?         @db.VarChar(255)
+  image       String          @db.VarChar(255)
+  ktp_photo   String          @db.VarChar(255)
+  nik         String          @db.VarChar(255)
+  no_rek      String          @db.VarChar(255)
+  phone       String          @db.VarChar(255)
   status      channels_status @default(UNVERIFIED)
   created_at  DateTime        @default(now())
   updated_at  DateTime        @updatedAt
-  users       users?          @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "channels_ibfk_1")
+  users       users           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "channels_ibfk_1")
   events      events[]
   follows     follows[]
+  ratings     ratings[]
 
   @@index([user_id], map: "user_id")
 }
 
 model events {
-  id            String         @id @default(cuid())
-  channel_id    String?        @db.VarChar(255)
-  category_id   String?        @db.VarChar(255)
-  tag_id        String?        @db.VarChar(255)
-  name          String?        @db.VarChar(255)
-  description   String?        @db.LongText
-  image         String?        @db.VarChar(255)
-  tf_image      String?        @db.VarChar(255)
-  location      String?        @db.VarChar(255)
-  link_group    String         @db.VarChar(255)
-  is_paid       Boolean?       @default(false)
-  is_online     Boolean?       @default(true)
-  price         Float?
-  status        events_status? @default(PENDING)
-  post_duration Int            @default(0)
-  event_date    DateTime?      @db.DateTime(0)
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-  channels      channels?      @relation(fields: [channel_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_1")
-  categories    categories?    @relation(fields: [category_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_2")
-  tags          tags?          @relation(fields: [tag_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "events_ibfk_3")
-  favorites     favorites[]
-  user_events   user_events[]
+  id                String              @id @default(cuid())
+  channel_id        String              @db.VarChar(255)
+  category_id       String              @db.VarChar(255)
+  tag_id            String              @db.VarChar(255)
+  name              String              @db.VarChar(255)
+  description       String?             @db.LongText
+  image             String              @db.VarChar(255)
+  website_url       String              @db.VarChar(255)
+  location          String              @db.VarChar(255)
+  link_group        String              @db.VarChar(255)
+  is_paid           Boolean             @default(false)
+  is_online         Boolean             @default(true)
+  price             Float
+  status            events_status       @default(PENDING)
+  post_duration     Int                 @default(0)
+  event_date        DateTime            @db.DateTime(0)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  channels          channels            @relation(fields: [channel_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "events_ibfk_1")
+  categories        categories          @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "events_ibfk_2")
+  tags              tags                @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "events_ibfk_3")
+  favorites         favorites[]
+  user_events       user_events[]
+  withdraw_requests withdraw_requests[]
+  reports           reports[]
 
   @@index([category_id], map: "category_id")
   @@index([channel_id], map: "channel_id")
@@ -66,25 +70,25 @@ model events {
 
 model favorites {
   id         String   @id @default(cuid())
-  user_id    String?  @db.VarChar(255)
-  event_id   String?  @db.VarChar(255)
+  user_id    String   @db.VarChar(255)
+  event_id   String   @db.VarChar(255)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  users      users?   @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "favorites_ibfk_1")
-  events     events?  @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "favorites_ibfk_2")
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "favorites_ibfk_1")
+  events     events   @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "favorites_ibfk_2")
 
   @@index([event_id], map: "event_id")
   @@index([user_id], map: "user_id")
 }
 
 model follows {
-  id         String    @id @default(cuid())
-  user_id    String?   @db.VarChar(255)
-  channel_id String?   @db.VarChar(255)
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  users      users?    @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "follows_ibfk_1")
-  channels   channels? @relation(fields: [channel_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "follows_ibfk_2")
+  id         String   @id @default(cuid())
+  user_id    String   @db.VarChar(255)
+  channel_id String   @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "follows_ibfk_1")
+  channels   channels @relation(fields: [channel_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "follows_ibfk_2")
 
   @@index([channel_id], map: "channel_id")
   @@index([user_id], map: "user_id")
@@ -92,7 +96,7 @@ model follows {
 
 model tags {
   id         String   @id @default(cuid())
-  name       String?  @db.VarChar(255)
+  name       String   @db.VarChar(255)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   events     events[]
@@ -100,31 +104,67 @@ model tags {
 
 model user_events {
   id         String   @id @default(cuid())
-  user_id    String?  @db.VarChar(255)
-  event_id   String?  @db.VarChar(255)
-  tf_image   String?  @db.VarChar(255)
-  status     Boolean?
+  user_id    String   @db.VarChar(255)
+  event_id   String   @db.VarChar(255)
+  status     Boolean
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  users      users?   @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_1")
-  events     events?  @relation(fields: [event_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_events_ibfk_2")
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "user_events_ibfk_1")
+  events     events   @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: Cascade, map: "user_events_ibfk_2")
 
   @@index([event_id], map: "event_id")
   @@index([user_id], map: "user_id")
 }
 
 model users {
-  id          String        @id @default(cuid())
-  name        String?       @db.VarChar(255)
-  email       String?       @db.VarChar(255)
-  image       String?       @db.VarChar(255)
-  role        users_role?
-  created_at  DateTime      @default(now())
-  updated_at  DateTime      @updatedAt
-  channels    channels[]
-  favorites   favorites[]
-  follows     follows[]
-  user_events user_events[]
+  id                String              @id @default(cuid())
+  name              String              @db.VarChar(255)
+  email             String              @db.VarChar(255)
+  image             String              @db.VarChar(255)
+  role              users_role
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  channels          channels[]
+  favorites         favorites[]
+  follows           follows[]
+  user_events       user_events[]
+  withdraw_requests withdraw_requests[]
+  reports           reports[]
+  ratings           ratings[]
+}
+
+model withdraw_requests {
+  id         String   @id @default(cuid())
+  user_id    String
+  event_id   String
+  amount     Decimal
+  events     events   @relation(fields: [event_id], references: [id])
+  users      users    @relation(fields: [user_id], references: [id])
+  status     Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model reports {
+  id          String   @id @default(cuid())
+  user_id     String
+  event_id    String
+  description String
+  events      events   @relation(fields: [event_id], references: [id])
+  users       users    @relation(fields: [user_id], references: [id])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model ratings {
+  id         String   @id @default(cuid())
+  user_id    String
+  channel_id String
+  rate       Int
+  users      users    @relation(fields: [user_id], references: [id])
+  events     channels @relation(fields: [channel_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 enum users_role {

@@ -13,8 +13,7 @@ import {
 import * as React from "react";
 
 interface MemberBroadcastEmailProps {
-  userFirstname: string | null;
-  channel_id: string;
+  content: string;
 }
 
 const baseUrl = process.env.VERCEL_URL
@@ -22,12 +21,10 @@ const baseUrl = process.env.VERCEL_URL
   : "";
 
 export const MemberBroadcastEmail = ({
-  userFirstname,
-  channel_id,
+  content,
 }: MemberBroadcastEmailProps) => (
   <Html>
     <Head />
-    <Preview>Notifikasi Event Baru di Channel yang Diikuti</Preview>
     <Body style={main}>
       <Container style={container}>
         <Img
@@ -40,16 +37,7 @@ export const MemberBroadcastEmail = ({
             margin: "0 auto",
           }}
         />
-        <Text style={paragraph}>Hi {userFirstname},</Text>
-        <Text style={paragraph}>
-          Kami ingin memberitahumu bahwa channel yang kamu ikuti telah
-          mengupload sebuah event baru!
-        </Text>
-        <Text style={paragraph}>
-          Kunjungi{" "}
-          <a href={baseUrl + "/channels/" + channel_id}>link berikut</a> untuk
-          informasi lebih lanjut.
-        </Text>
+        <Text style={paragraph} dangerouslySetInnerHTML={{ __html: content }} />
         <Text style={paragraph}>
           Best,
           <br />
@@ -65,7 +53,7 @@ export const MemberBroadcastEmail = ({
 );
 
 MemberBroadcastEmail.PreviewProps = {
-  userFirstname: "Alan",
+  content: "<h1>Example</h1>",
 } as MemberBroadcastEmailProps;
 
 export default MemberBroadcastEmail;

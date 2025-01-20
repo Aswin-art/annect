@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { events } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
 import Link from "next/link";
+import Image from "next/image";
 
 export const columns: ColumnDef<events>[] = [
   {
@@ -27,20 +28,45 @@ export const columns: ColumnDef<events>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "image",
+    header: "EVENT PHOTO",
+    cell: ({ row }) => (
+      <Image
+        src={row.original.image ?? ""}
+        width={100}
+        height={100}
+        alt="image-background"
+        className="object-cover rounded-md"
+      />
+    ),
+  },
+  {
     accessorKey: "channels.name",
-    header: "CHANNEL",
+    header: "PUBLISHER",
   },
   {
     accessorKey: "name",
-    header: "NAME",
+    header: "EVENT NAME",
+  },
+  {
+    accessorKey: "price",
+    header: "EVENT PRICE",
+  },
+  {
+    accessorKey: "post_duration",
+    header: "POST DURATION",
+  },
+  {
+    accessorKey: "event_date",
+    header: "EVENT DATE",
   },
   {
     accessorKey: "tags.name",
-    header: "TAG",
+    header: "EVENT TAG",
   },
   {
     accessorKey: "categories.name",
-    header: "CATEGORY",
+    header: "EVENT CATEGORY",
   },
   {
     accessorKey: "price",
@@ -51,24 +77,6 @@ export const columns: ColumnDef<events>[] = [
           ? formatPrice(row.original.price)
           : "Gratis"}
       </span>
-    ),
-  },
-  {
-    accessorKey: "tf_image",
-    header: "PAYMENT IMAGE",
-    cell: ({ row }) => (
-      <>
-        {row.original.tf_image && (
-          <Link
-            href={row.original.tf_image}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary"
-          >
-            View Image
-          </Link>
-        )}
-      </>
     ),
   },
   {

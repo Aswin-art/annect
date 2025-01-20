@@ -35,6 +35,9 @@ import {
 import { formatDate, formatPrice } from "@/lib/format";
 import toast from "react-hot-toast";
 import { followChannel } from "@/actions/followAction";
+import EditableEditor from "@/components/EditableEditor";
+import { follows } from "@prisma/client";
+import { addFavorite } from "@/actions/favoriteAction";
 
 type UserType = {
   id: string;
@@ -52,6 +55,7 @@ type EventType = {
   price: number;
   is_paid: boolean;
   is_online: boolean;
+  is_favorite: boolean;
   categories?: {
     id: string;
     name: string;
@@ -73,13 +77,12 @@ type ChannelType = {
     follows: number;
     events: number;
   };
+  follows: follows[];
   events?: EventType[];
 };
 
 export default function Page({ params }: { params: { id: string } }) {
   const [channels, setChannels] = useState<ChannelType>();
-
-  const [isFollowing, setIsFollowing] = useState(false);
 
   const getChannelDetail = async () => {
     const data = await getChannelById(params.id);
@@ -90,10 +93,20 @@ export default function Page({ params }: { params: { id: string } }) {
   const handleFollowChannel = async () => {
     try {
       await followChannel(params.id);
-      setIsFollowing(true);
       toast.success("Berhasil");
       await getChannelDetail();
     } catch (error) {
+      toast.error("Gagal");
+    }
+  };
+
+  const handleFavorite = async (eventId: string) => {
+    const result = await addFavorite(eventId);
+
+    if (result) {
+      toast.success("Berhasil");
+      getChannelDetail();
+    } else {
       toast.error("Gagal");
     }
   };
@@ -124,7 +137,6 @@ export default function Page({ params }: { params: { id: string } }) {
                         channels?.users?.image ??
                         "https://github.com/shadcn.png"
                       }
-                      // src={"https://github.com/shadcn.png"}
                       fill
                       sizes="100%"
                       alt="avatar"
@@ -132,7 +144,16 @@ export default function Page({ params }: { params: { id: string } }) {
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <p className="font-bold text-xl">{channels?.users?.name}</p>
+                    <h3 className="font-bold text-xl">{channels?.name}</h3>
+                    <div className="flex gap-2">
+                      <p className="text-muted-foreground text-sm">
+                        {channels?.events?.length ?? 0} Event
+                      </p>
+                      <p className="text-muted-foreground text-sm">|</p>
+                      <p className="text-muted-foreground text-sm">
+                        {channels.follows.length ?? 0} Followers
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <Button
@@ -149,7 +170,7 @@ export default function Page({ params }: { params: { id: string } }) {
               </div>
             </div>
             <Separator />
-            <Tabs defaultValue="events" className="space-y-4">
+            <Tabs defaultValue="events" className="space-y-4 mt-4">
               <TabsList>
                 <TabsTrigger value="events">Daftar Event</TabsTrigger>
                 <TabsTrigger value="description">Deskripsi</TabsTrigger>
@@ -248,8 +269,12 @@ export default function Page({ params }: { params: { id: string } }) {
                               <TooltipTrigger asChild>
                                 <Button
                                   variant={"ghost"}
-                                  onClick={async () => handleFollowChannel()}
-                                  className="hover:text-white text-primary hover:bg-primary transition-all duration-200"
+                                  onClick={() => handleFavorite(event.id)}
+                                  className={`hover:text-white hover:bg-primary transition-all duration-200 border border-primary ${
+                                    event.is_favorite
+                                      ? "bg-primary text-white"
+                                      : "text-primary"
+                                  }`}
                                 >
                                   <Bookmark />
                                 </Button>
@@ -266,10 +291,10 @@ export default function Page({ params }: { params: { id: string } }) {
                 </div>
               </TabsContent>
               <TabsContent value="description" className="space-y-4">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: channels?.description || "",
-                  }}
+                <EditableEditor
+                  onChange={() => {}}
+                  value={channels.description}
+                  editable={false}
                 />
               </TabsContent>
             </Tabs>

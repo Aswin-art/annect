@@ -5,30 +5,30 @@ const isProtectedRoute = createRouteMatcher([
   "/users(.*)",
   "/admin(.*)",
   "/events(.*)/discussions,",
-  "/api(.*)",
+  "/api/transactions",
 ]);
 
 const isUserDashboardRoute = createRouteMatcher(["/users(.*)"]);
 
-// Modify the middleware to allow access to /sign-in and /sign-up without protection
 export default clerkMiddleware(async (auth, req) => {
   const url = req.nextUrl;
+  const { userId, redirectToSignIn } = await auth();
 
   const isAuthRoute =
     url.pathname === "/sign-in" || url.pathname === "/sign-up";
 
-  if (!auth().userId && isProtectedRoute(req) && !isAuthRoute) {
-    return auth().redirectToSignIn();
+  if (!userId && isProtectedRoute(req) && !isAuthRoute) {
+    return redirectToSignIn();
   }
 
   if (
-    auth().userId === "user_2kyikQquTfg2j4BH2OFzS8cyf2D" &&
+    userId === process.env.NEXT_PUBLIC_CLERK_ADMIN_USER_ID &&
     isUserDashboardRoute(req)
   ) {
     return NextResponse.redirect(new URL("/admin", url));
   }
 
-  if (isAuthRoute && auth().userId) {
+  if (isAuthRoute && userId) {
     const previousUrl = req.headers.get("referer") ?? "/";
     return NextResponse.redirect(new URL(previousUrl, req.url));
   }

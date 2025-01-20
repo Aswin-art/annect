@@ -1,8 +1,6 @@
-import { checkUser } from "@/actions/userActions";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
@@ -15,11 +13,6 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await checkUser();
-
-  if (!user) {
-    redirect("/sign-in");
-  }
   return (
     <>
       <Toaster />

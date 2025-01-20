@@ -15,14 +15,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { channels_status, events, follows, users } from "@prisma/client";
 import { Plus, UserRoundPen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,24 +31,12 @@ const breadcrumbItems = [
   { title: "Channel", link: "/users/channels" },
 ];
 
-type ChannelUser = {
-  id: string;
-  image: string;
-  name: string | null;
-  description: string | null;
-  status: channels_status;
-  users: users | null;
-  events: events[] | null;
-  follows: follows[] | null;
-};
-
 export default function Page() {
   const { user } = useUser();
   const [channels, setChannels] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [paymentLoading, setPaymentLoading] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(false);
-  const [paymentImage, setPaymentImage] = useState<string | undefined>("");
   const getData = async () => {
     const req = await getChannelByUserId();
     setChannels(req);
@@ -79,10 +60,10 @@ export default function Page() {
     const req = await eventPayment(event_id);
 
     if (req) {
+      setPaymentLoading(false);
       router.push(pathname);
       toast.success("Pembayaran Berhasil!");
       getData();
-      setLoading(false);
     }
   };
 

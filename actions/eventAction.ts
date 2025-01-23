@@ -22,6 +22,7 @@ export const getAllData = async (
     const getCategories = await fetch(
       process.env.NEXT_PUBLIC_API_BASE_URL + "/categories"
     );
+
     const getEvents = await fetch(
       process.env.NEXT_PUBLIC_API_BASE_URL +
         `/events?users=${user?.id}&name=${nameParams}&tags=${tagParams}&categories=${categoryParams}&prices=${priceParams}`

@@ -354,9 +354,7 @@ export default function Page() {
               </div>
               <div className="col-span-12 lg:col-span-9">
                 {events?.length <= 0 ? (
-                  <p className="text-secondary-foreground flex justify-center items-center">
-                    Tidak ada event yang tersedia....
-                  </p>
+                  <FallbackLoading />
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {events?.map((event) => (

@@ -1,5 +1,7 @@
 "use server";
 
+import { db } from "@/lib/db";
+
 export const getAllData = async () => {
   try {
     const req = await fetch(
@@ -12,5 +14,15 @@ export const getAllData = async () => {
     }
   } catch (err) {
     console.log(err);
+  }
+};
+
+export const getAllDataLocal = async () => {
+  try {
+    const res = await db.categories.findMany();
+    return res;
+  } catch (err) {
+    console.log(err);
+    return [];
   }
 };

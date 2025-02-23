@@ -6,13 +6,57 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "react-hot-toast";
-import Head from "next/head";
 import Script from "next/script";
 
 export const metadata: Metadata = {
-  title: "Annect",
+  title: {
+    default:
+      "Annect - Event Akademik untuk Pelajar, Mahasiswa, dan Siswa di Seluruh Indonesia",
+    template: "%s | Annect",
+  },
   description:
-    "Event Akademic Untuk Pelajar Mahasiswa Maupun Siswa di Seluruh Indonesia",
+    "Temukan berbagai event akademik seperti seminar, bootcamp, webinar, workshop, dan lomba di Annect. Jadilah penyelenggara atau ikuti event yang menarik untukmu!",
+  keywords:
+    "event akademik, seminar, bootcamp, webinar, workshop, lomba, mahasiswa, pelajar, siswa, Indonesia",
+  authors: [{ name: "Annect", url: "https://annect.vercel.app/" }],
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    height: "device-height",
+    userScalable: false,
+    maximumScale: 1,
+    minimumScale: 1,
+  },
+  alternates: {
+    canonical: "https://annect.vercel.app/",
+  },
+  openGraph: {
+    title:
+      "Annect - Event Akademik untuk Pelajar, Mahasiswa, dan Siswa di Seluruh Indonesia",
+    description:
+      "Temukan berbagai event akademik seperti seminar, bootcamp, webinar, workshop, dan lomba di Annect. Jadilah penyelenggara atau ikuti event yang menarik untukmu!",
+    url: "https://annect.vercel.app/",
+    siteName: "Annect",
+    images: [
+      {
+        url: "https://annect.vercel.app/logo.svg",
+        width: 1200,
+        height: 630,
+        alt: "Annect - Event Akademik",
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@annect",
+    title:
+      "Annect - Event Akademik untuk Pelajar, Mahasiswa, dan Siswa di Seluruh Indonesia",
+    description:
+      "Temukan berbagai event akademik seperti seminar, bootcamp, webinar, workshop, dan lomba di Annect. Jadilah penyelenggara atau ikuti event yang menarik untukmu!",
+    images: ["https://annect.vercel.app/logo.svg"],
+  },
 };
 
 export default function RootLayout({

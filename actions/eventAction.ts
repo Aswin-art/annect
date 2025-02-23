@@ -8,6 +8,91 @@ import {
   sendPaymentProcessEmail,
 } from "@/lib/mail";
 import { currentUser } from "@clerk/nextjs/server";
+import { events_status } from "@prisma/client";
+import { getAllDataLocal as getAllTagData } from "./tagAction";
+import { getAllDataLocal as getAllCategoryData } from "./categoryAction";
+
+export const getEvents = async (
+  nameParams?: string | null,
+  tagParams?: string | null,
+  categoryParams?: string | null,
+  priceParams?: string | null
+): Promise<any[]> => {
+  const user = await currentUser();
+
+  try {
+    const name = nameParams && nameParams !== "undefined" ? nameParams : null;
+    const user_id = user?.id && user?.id !== "undefined" ? user?.id : null;
+    const status = "ONGOING";
+
+    const is_paid: string[] =
+      priceParams && priceParams !== "undefined" && priceParams.length > 0
+        ? priceParams.split(",")
+        : [];
+    const tags: string[] =
+      tagParams && tagParams !== "undefined" && tagParams.length > 0
+        ? tagParams.split(",")
+        : [];
+    const categories: string[] =
+      categoryParams &&
+      categoryParams !== "undefined" &&
+      categoryParams.length > 0
+        ? categoryParams.split(",")
+        : [];
+
+    const isPaidFilters =
+      is_paid.length > 0
+        ? is_paid.map((status: string) => {
+            if (status === "PAID") return true;
+            if (status === "UNPAID") return false;
+            return null;
+          })
+        : [];
+
+    const events = await db.events.findMany({
+      where: {
+        status: status as events_status,
+        ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
+        ...(isPaidFilters.length === 1 && isPaidFilters[0] !== null
+          ? { is_paid: isPaidFilters[0] }
+          : {}),
+        ...(tags.length > 0 ? { tag_id: { in: tags } } : {}),
+        ...(categories.length > 0 ? { category_id: { in: categories } } : {}),
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+      include: {
+        tags: {
+          select: {
+            name: true,
+          },
+        },
+        categories: {
+          select: {
+            name: true,
+          },
+        },
+        favorites: {
+          select: {
+            user_id: true,
+          },
+        },
+      },
+    });
+
+    events.forEach((event: any) => {
+      event.is_favorite =
+        event.favorites?.some((favorite: any) => favorite.user_id == user_id) ||
+        false;
+    });
+
+    return events;
+  } catch (err: any) {
+    console.error("Error retrieving events:", err.message);
+    return [];
+  }
+};
 
 export const getAllData = async (
   nameParams?: string | null,
@@ -15,30 +100,18 @@ export const getAllData = async (
   categoryParams?: string | null,
   priceParams?: string | null
 ) => {
-  const user = await currentUser();
-
   try {
-    const getTags = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL + "/tags");
-    const getCategories = await fetch(
-      process.env.NEXT_PUBLIC_API_BASE_URL + "/categories"
-    );
+    const [tagRes, categoryRes, events] = await Promise.all([
+      getAllTagData(),
+      getAllCategoryData(),
+      getEvents(nameParams, tagParams, categoryParams, priceParams),
+    ]);
 
-    const getEvents = await fetch(
-      process.env.NEXT_PUBLIC_API_BASE_URL +
-        `/events?users=${user?.id}&name=${nameParams}&tags=${tagParams}&categories=${categoryParams}&prices=${priceParams}`
-    );
-
-    const tagRes = await getTags.json();
-    const categoryRes = await getCategories.json();
-    const eventRes = await getEvents.json();
-
-    const data = {
+    return {
       tags: tagRes,
       categories: categoryRes,
-      events: eventRes,
+      events,
     };
-
-    return data;
   } catch (err) {
     console.log(err);
   }

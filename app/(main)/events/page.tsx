@@ -10,12 +10,11 @@ import {
   UserRound,
 } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback, memo } from "react";
 import { getAllData, searchEventByTitle } from "@/actions/eventAction";
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import CountUp from "react-countup";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { categories, tags } from "@prisma/client";
@@ -48,6 +47,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
+import dynamic from "next/dynamic";
+
+const CountUp = dynamic(() => import("react-countup"), {
+  ssr: false,
+  loading: () => <span className="text-primary">2000</span>,
+});
 
 type EventType = {
   id: string;
@@ -79,10 +84,150 @@ const filterSchema = z.object({
   is_paid: z.string().array().nullable(),
 });
 
+const EventCard = memo(
+  ({
+    event,
+    handleFavorite,
+  }: {
+    event: EventType;
+    handleFavorite: (eventId: string) => void;
+  }) => (
+    <Card className="group hover:-translate-y-3 hover:border-primary transition-all duration-300">
+      <div className="relative w-full h-[300px]">
+        <Image
+          src={event.image || "/placeholder.svg"}
+          alt={event.name}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover w-full h-full rounded-t-lg"
+          priority={false}
+        />
+      </div>
+      <CardHeader>
+        <div className="flex flex-col gap-4 mb-5">
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-1 items-center text-muted-foreground">
+              <UserRound className="w-4 h-4" />
+              <p className="text-xs">{event.categories?.name}</p>
+            </div>
+            <div className="flex gap-1 items-center text-muted-foreground">
+              <LayoutGrid className="w-4 h-4" />
+              <p className="text-xs">{event.tags?.name}</p>
+            </div>
+            <div className="flex gap-1 items-center text-muted-foreground">
+              <MapPin className="w-4 h-4" />
+              <p className="text-xs">
+                {event.is_online ? "Online" : "Offline"}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-1 items-center text-muted-foreground">
+              <Clock className="w-4 h-4" />
+              <p className="text-xs">{formatDate(event.event_date)}</p>
+            </div>
+            <div className="flex gap-1 items-center text-muted-foreground">
+              <Tag className="w-4 h-4" />
+              <p className="text-xs">
+                {event.is_paid ? formatPrice(event.price) : "Gratis"}
+              </p>
+            </div>
+          </div>
+        </div>
+        <CardTitle>
+          <Link
+            href={`/events/${event.id}`}
+            className="hover:text-primary line-clamp-2"
+          >
+            {event.name}
+          </Link>
+        </CardTitle>
+        <CardDescription className="max-w-lg line-clamp-3">
+          {event.description?.replace(/<[^>]*>/g, "")}
+        </CardDescription>
+      </CardHeader>
+      <CardFooter>
+        <div className="flex gap-2 ms-auto">
+          <Link href={`/events/${event.id}`}>
+            <Button
+              variant="secondary"
+              className="hover:text-primary transition-all duration-300"
+            >
+              Lihat detail
+            </Button>
+          </Link>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleFavorite(event.id)}
+                  className={`hover:text-white hover:bg-primary transition-all duration-200 border border-primary ${
+                    event.is_favorite ? "bg-primary text-white" : "text-primary"
+                  }`}
+                >
+                  <Bookmark />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {event.is_favorite ? "Hapus Favorite" : "Simpan Event"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </CardFooter>
+    </Card>
+  )
+);
+
+EventCard.displayName = "EventCard";
+
+const FilterSection = ({
+  title,
+  name,
+  items,
+  form,
+}: {
+  title: string;
+  name: "tag_id" | "category_id" | "is_paid";
+  items: Array<{ id: string; name: string }>;
+  form: any;
+}) => (
+  <div className="flex flex-col gap-4">
+    <h5 className="font-bold text-xl mb-2">{title}</h5>
+    {items.map((item) => (
+      <FormField
+        key={item.id}
+        control={form.control}
+        name={name}
+        render={({ field }) => (
+          <FormItem className="flex items-center gap-2">
+            <FormControl>
+              <Checkbox
+                value={item.id}
+                checked={field.value?.includes(item.id)}
+                onCheckedChange={(checked) => {
+                  const newValue = checked
+                    ? [...(field.value || []), item.id]
+                    : (field.value || []).filter((id: any) => id !== item.id);
+                  field.onChange(newValue);
+                }}
+              />
+            </FormControl>
+            <FormLabel className="!mt-0 cursor-pointer">{item.name}</FormLabel>
+          </FormItem>
+        )}
+      />
+    ))}
+  </div>
+);
+
 export default function Page() {
   const [events, setEvents] = useState<EventType[]>([]);
   const [tags, setTags] = useState<tags[]>([]);
-  const [categories, setCategories] = useState<categories[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
+    []
+  );
 
   const form = useForm<z.infer<typeof filterSchema>>({
     resolver: zodResolver(filterSchema),
@@ -102,63 +247,71 @@ export default function Page() {
   const categoryParams = searchParams.get("categories");
   const priceParams = searchParams.get("prices");
 
-  const getData = async (
-    nameParams?: string | null,
-    tagParams?: string | null,
-    categoryParams?: string | null,
-    priceParams?: string | null
-  ) => {
-    const data = await getAllData(
-      nameParams,
-      tagParams,
-      categoryParams,
-      priceParams
-    );
+  const getData = useCallback(
+    async (
+      name?: string | null,
+      tags?: string | null,
+      categories?: string | null,
+      prices?: string | null
+    ) => {
+      try {
+        const data = await getAllData(name, tags, categories, prices);
+        setTags(data?.tags || []);
+        setCategories(
+          (data?.categories || []).map((category: any) => ({
+            id: category.id,
+            name: category.name || "Unknown",
+          }))
+        );
+        setEvents(data?.events || []);
+      } catch (error) {
+        toast.error("Gagal memuat data");
+      }
+    },
+    []
+  );
 
-    setTags(data?.tags);
-    setCategories(data?.categories);
-    setEvents(data?.events);
-  };
-
-  const handleResetFilter = async () => {
+  const handleResetFilter = useCallback(() => {
     form.reset();
-    router.replace("/events", {
-      scroll: false,
-    });
-  };
+    router.replace("/events", { scroll: false });
+  }, [form, router]);
 
-  const handleFavorite = async (eventId: string) => {
-    const result = await addFavorite(eventId);
+  const handleFavorite = useCallback(
+    async (eventId: string) => {
+      const result = await addFavorite(eventId);
+      toast[result ? "success" : "error"](result ? "Berhasil" : "Gagal");
+      getData(nameParams, tagParams, categoryParams, priceParams);
+    },
+    [getData, nameParams, tagParams, categoryParams, priceParams]
+  );
 
-    if (result) {
-      toast.success("Berhasil");
-      getData();
-    } else {
-      toast.error("Gagal");
-    }
-  };
+  const handleSearch = useCallback(
+    (values: z.infer<typeof filterSchema>) => {
+      const params = new URLSearchParams();
+
+      if (values.name) params.set("name", values.name);
+      if (values.tag_id?.length) params.set("tags", values.tag_id.join(","));
+      if (values.category_id?.length)
+        params.set("categories", values.category_id.join(","));
+      if (values.is_paid?.length)
+        params.set("prices", values.is_paid.join(","));
+
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname]
+  );
 
   useEffect(() => {
-    if (nameParams || tagParams || categoryParams || priceParams) {
-      form.setValue("name", nameParams);
-      getData(nameParams, tagParams, categoryParams, priceParams);
-    } else {
-      getData();
-    }
-  }, [searchParams]);
+    const initialValues = {
+      name: nameParams,
+      tag_id: tagParams?.split(",") || [],
+      category_id: categoryParams?.split(",") || [],
+      is_paid: priceParams?.split(",") || [],
+    };
 
-  const handleSearch = async (value: z.infer<typeof filterSchema>) => {
-    const tags = value.tag_id?.join(",");
-    const prices = value.is_paid?.join(",");
-    const categories = value.category_id?.join(",");
-
-    router.push(
-      `${pathname}?name=${value.name}&tags=${tags}&categories=${categories}&prices=${prices}`,
-      {
-        scroll: false,
-      }
-    );
-  };
+    form.reset(initialValues);
+    getData(nameParams, tagParams, categoryParams, priceParams);
+  }, [searchParams, form, getData]);
 
   return (
     <Suspense fallback={<FallbackLoading />}>
@@ -170,7 +323,7 @@ export default function Page() {
               alt="icon-chart"
               width={210}
               height={210}
-              loading="lazy"
+              priority
               className="absolute bottom-0 left-0 ml-7"
             />
             <Image
@@ -178,7 +331,7 @@ export default function Page() {
               alt="icon-search"
               width={180}
               height={180}
-              loading="lazy"
+              priority
               className="absolute right-0 bottom-0 mr-5"
             />
             <h1 className="text-4xl text-center font-semibold">
@@ -200,7 +353,7 @@ export default function Page() {
                       control={form.control}
                       name="name"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="w-full">
                           <FormControl>
                             <Input
                               type="text"
@@ -245,102 +398,27 @@ export default function Page() {
                     onSubmit={form.handleSubmit(handleSearch)}
                     className="space-y-8"
                   >
-                    <div className="flex flex-col gap-4">
-                      <h5 className="font-bold text-xl mb-2">Tipe Event</h5>
-                      {tags?.map((tag) => (
-                        <FormField
-                          key={tag.id}
-                          control={form.control}
-                          name="tag_id"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center gap-2">
-                              <FormControl>
-                                <Checkbox
-                                  value={tag.id}
-                                  checked={field.value?.includes(tag.id)}
-                                  onCheckedChange={(isChecked: boolean) => {
-                                    const newValue = isChecked
-                                      ? [...(field.value || []), tag.id]
-                                      : (field.value || []).filter(
-                                          (id) => id !== tag.id
-                                        );
-                                    field.onChange(newValue);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0">
-                                {tag.name}
-                              </FormLabel>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex flex-col gap-4">
-                      <h5 className="font-bold text-xl mb-2">Kategori Event</h5>
-                      {categories?.map((category) => (
-                        <FormField
-                          key={category.id}
-                          control={form.control}
-                          name="category_id"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center gap-2">
-                              <FormControl>
-                                <Checkbox
-                                  value={category.id}
-                                  checked={field.value?.includes(category.id)}
-                                  onCheckedChange={(isChecked: boolean) => {
-                                    const newValue = isChecked
-                                      ? [...(field.value || []), category.id]
-                                      : (field.value || []).filter(
-                                          (id) => id !== category.id
-                                        );
-                                    field.onChange(newValue);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0">
-                                {category.name}
-                              </FormLabel>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex flex-col gap-4">
-                      <h5 className="font-bold text-xl mb-2">Harga Event</h5>
-                      {PRICE_TYPE.map((price) => (
-                        <FormField
-                          key={price}
-                          control={form.control}
-                          name="is_paid"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center gap-2">
-                              <FormControl>
-                                <Checkbox
-                                  value={price}
-                                  checked={field.value?.includes(price)}
-                                  onCheckedChange={(isChecked: boolean) => {
-                                    const newValue = isChecked
-                                      ? [...(field.value || []), price]
-                                      : (field.value || []).filter(
-                                          (id) => id !== price
-                                        );
-                                    field.onChange(newValue);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0">
-                                {price === "PAID" ? "Berbayar" : "Gratis"}
-                              </FormLabel>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                    </div>
+                    <FilterSection
+                      title="Tipe Event"
+                      name="tag_id"
+                      items={tags}
+                      form={form}
+                    />
+                    <FilterSection
+                      title="Kategori Event"
+                      name="category_id"
+                      items={categories}
+                      form={form}
+                    />
+                    <FilterSection
+                      title="Harga Event"
+                      name="is_paid"
+                      items={PRICE_TYPE.map((p) => ({
+                        id: p,
+                        name: p === "PAID" ? "Berbayar" : "Gratis",
+                      }))}
+                      form={form}
+                    />
                     <div className="flex flex-col gap-4">
                       <Button
                         type="submit"
@@ -358,119 +436,11 @@ export default function Page() {
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     {events?.map((event) => (
-                      <Card
+                      <EventCard
                         key={event.id}
-                        className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
-                      >
-                        <div className="relative w-full h-[300px]">
-                          <Image
-                            src={event.image || ""}
-                            alt="image"
-                            width={0}
-                            height={0}
-                            fill
-                            sizes="100%"
-                            loading="lazy"
-                            className="object-cover w-full h-full rounded-t-lg"
-                          />
-                        </div>
-                        <CardHeader>
-                          <div className="flex flex-col gap-4 mb-5">
-                            <div className="flex gap-2">
-                              <div className="flex gap-1 items-center text-muted-foreground">
-                                <UserRound className="w-4 h-4" />
-                                <p className="text-xs">
-                                  {event.categories?.name}
-                                </p>
-                              </div>
-                              <div className="flex gap-1 items-center text-muted-foreground">
-                                <LayoutGrid className="w-4 h-4" />
-                                <p className="text-xs">{event.tags?.name}</p>
-                              </div>
-                              <div className="flex gap-1 items-center text-muted-foreground">
-                                <MapPin className="w-4 h-4" />
-                                <p className="text-xs">
-                                  {event.is_online ? "Online" : "Offline"}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <div className="flex gap-1 items-center text-muted-foreground">
-                                <Clock className="w-4 h-4" />
-                                <p className="text-xs">
-                                  {event.event_date &&
-                                    formatDate(event.event_date)}
-                                </p>
-                              </div>
-                              <div className="flex gap-1 items-center text-muted-foreground">
-                                <Tag className="w-4 h-4" />
-                                <p className="text-xs">
-                                  {event.is_paid
-                                    ? formatPrice(event.price)
-                                    : "Gratis"}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          <CardTitle>
-                            <Link
-                              href={"/events/" + event.id}
-                              className="hover:text-primary"
-                            >
-                              {event.name.length > 20
-                                ? event.name.slice(0, 20) + "..."
-                                : event.name}
-                            </Link>
-                          </CardTitle>
-                          <CardDescription className="max-w-lg">
-                            <div
-                              dangerouslySetInnerHTML={{
-                                __html: event.description
-                                  ? event.description.length > 150
-                                    ? `${event.description.slice(0, 150)}...`
-                                    : event.description
-                                  : "",
-                              }}
-                            />
-                          </CardDescription>
-                        </CardHeader>
-                        <CardFooter>
-                          <div className="flex gap-2 ms-auto">
-                            <Link href={"/events/" + event.id}>
-                              <Button
-                                variant={"secondary"}
-                                className="hover:text-primary transition-all duration-300"
-                              >
-                                Lihat detail
-                              </Button>
-                            </Link>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant={"ghost"}
-                                    onClick={() => handleFavorite(event.id)}
-                                    className={`hover:text-white hover:bg-primary transition-all duration-200 border border-primary ${
-                                      event.is_favorite
-                                        ? "bg-primary text-white"
-                                        : "text-primary"
-                                    }`}
-                                  >
-                                    <Bookmark />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {event.is_favorite ? (
-                                    <p>Hapus Favorite</p>
-                                  ) : (
-                                    <p>Simpan Event</p>
-                                  )}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        </CardFooter>
-                      </Card>
+                        event={event}
+                        handleFavorite={handleFavorite}
+                      />
                     ))}
                   </div>
                 )}

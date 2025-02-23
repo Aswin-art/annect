@@ -14,3 +14,13 @@ export const getAllData = async () => {
     console.log(err);
   }
 };
+
+export const getAllDataLocal = async () => {
+  try {
+    const res = await db.tags.findMany();
+    return res;
+  } catch (err) {
+    console.log(err);
+    return [];
+  }
+};

@@ -19,14 +19,6 @@ export const metadata: Metadata = {
   keywords:
     "event akademik, seminar, bootcamp, webinar, workshop, lomba, mahasiswa, pelajar, siswa, Indonesia",
   authors: [{ name: "Annect", url: "https://annect.vercel.app/" }],
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    height: "device-height",
-    userScalable: false,
-    maximumScale: 1,
-    minimumScale: 1,
-  },
   alternates: {
     canonical: "https://annect.vercel.app/",
   },

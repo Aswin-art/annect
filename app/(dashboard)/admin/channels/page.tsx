@@ -17,7 +17,7 @@ const breadcrumbItems = [
 ];
 
 export default function Page() {
-  const [channels, setChannels] = useState([]);
+  const [channels, setChannels] = useState<any[]>([]);
 
   const getData = async () => {
     const req = await getAllData();

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Wrapper from "@/components/Wrapper";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import Link from "next/link";
@@ -84,11 +84,14 @@ type ChannelType = {
 export default function Page({ params }: { params: { id: string } }) {
   const [channels, setChannels] = useState<ChannelType>();
 
-  const getChannelDetail = async () => {
-    const data = await getChannelById(params.id);
-    setChannels(data);
-    console.log(data);
-  };
+  const getChannelDetail = useCallback(async () => {
+    try {
+      const data = await getChannelById(params.id);
+      setChannels(data);
+    } catch (error) {
+      toast.error("Gagal memuat detail channel");
+    }
+  }, [params.id]);
 
   const handleFollowChannel = async () => {
     try {
@@ -102,10 +105,9 @@ export default function Page({ params }: { params: { id: string } }) {
 
   const handleFavorite = async (eventId: string) => {
     const result = await addFavorite(eventId);
-
     if (result) {
       toast.success("Berhasil");
-      getChannelDetail();
+      await getChannelDetail();
     } else {
       toast.error("Gagal");
     }
@@ -113,7 +115,8 @@ export default function Page({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     getChannelDetail();
-  }, []);
+  }, [getChannelDetail]);
+
   return (
     <Wrapper>
       <div className="mt-40">
@@ -177,17 +180,15 @@ export default function Page({ params }: { params: { id: string } }) {
               </TabsList>
               <TabsContent value="events" className="space-y-4">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {channels?.events?.map((event, index: number) => (
+                  {channels?.events?.map((event) => (
                     <Card
-                      key={index}
+                      key={event.id}
                       className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
                     >
                       <div className="relative w-full h-[300px]">
                         <Image
                           src={event.image || ""}
                           alt="image"
-                          width={0}
-                          height={0}
                           fill
                           sizes="100%"
                           loading="lazy"
@@ -234,7 +235,7 @@ export default function Page({ params }: { params: { id: string } }) {
                         </div>
                         <CardTitle>
                           <Link
-                            href={"/events/" + event.id}
+                            href={`/events/${event.id}`}
                             className="hover:text-primary"
                           >
                             {event.name.length > 20
@@ -256,7 +257,7 @@ export default function Page({ params }: { params: { id: string } }) {
                       </CardHeader>
                       <CardFooter>
                         <div className="flex gap-2 ms-auto">
-                          <Link href={"/events/" + event.id}>
+                          <Link href={`/events/${event.id}`}>
                             <Button
                               variant={"secondary"}
                               className="hover:text-primary transition-all duration-300"

@@ -8,11 +8,11 @@ import {
   LayoutGrid,
   MapPin,
   UserRound,
+  Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect, Suspense, useCallback, memo } from "react";
 import { getAllData, searchEventByTitle } from "@/actions/eventAction";
-
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -88,9 +88,11 @@ const EventCard = memo(
   ({
     event,
     handleFavorite,
+    favoriteLoading,
   }: {
     event: EventType;
     handleFavorite: (eventId: string) => void;
+    favoriteLoading: boolean;
   }) => (
     <Card className="group hover:-translate-y-3 hover:border-primary transition-all duration-300">
       <div className="relative w-full h-[300px]">
@@ -99,6 +101,7 @@ const EventCard = memo(
           alt={event.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          quality={75}
           className="object-cover w-full h-full rounded-t-lg"
           priority={false}
         />
@@ -162,11 +165,16 @@ const EventCard = memo(
                 <Button
                   variant="ghost"
                   onClick={() => handleFavorite(event.id)}
+                  disabled={favoriteLoading}
                   className={`hover:text-white hover:bg-primary transition-all duration-200 border border-primary ${
                     event.is_favorite ? "bg-primary text-white" : "text-primary"
                   }`}
                 >
-                  <Bookmark />
+                  {favoriteLoading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Bookmark />
+                  )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -228,6 +236,9 @@ export default function Page() {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>(
     []
   );
+  const [loadingFavorite, setLoadingFavorite] = useState<
+    Record<string, boolean>
+  >({});
 
   const form = useForm<z.infer<typeof filterSchema>>({
     resolver: zodResolver(filterSchema),
@@ -278,11 +289,26 @@ export default function Page() {
 
   const handleFavorite = useCallback(
     async (eventId: string) => {
-      const result = await addFavorite(eventId);
-      toast[result ? "success" : "error"](result ? "Berhasil" : "Gagal");
-      getData(nameParams, tagParams, categoryParams, priceParams);
+      if (loadingFavorite[eventId]) return;
+      setLoadingFavorite((prev) => ({ ...prev, [eventId]: true }));
+      try {
+        const result = await addFavorite(eventId);
+        toast[result ? "success" : "error"](result ? "Berhasil" : "Gagal");
+        await getData(nameParams, tagParams, categoryParams, priceParams);
+      } catch (error) {
+        toast.error("Server sedang sibuk");
+      } finally {
+        setLoadingFavorite((prev) => ({ ...prev, [eventId]: false }));
+      }
     },
-    [getData, nameParams, tagParams, categoryParams, priceParams]
+    [
+      getData,
+      nameParams,
+      tagParams,
+      categoryParams,
+      priceParams,
+      loadingFavorite,
+    ]
   );
 
   const handleSearch = useCallback(
@@ -324,6 +350,7 @@ export default function Page() {
               width={210}
               height={210}
               priority
+              quality={80}
               className="absolute bottom-0 left-0 ml-7"
             />
             <Image
@@ -332,6 +359,7 @@ export default function Page() {
               width={180}
               height={180}
               priority
+              quality={80}
               className="absolute right-0 bottom-0 mr-5"
             />
             <h1 className="text-4xl text-center font-semibold">
@@ -440,6 +468,7 @@ export default function Page() {
                         key={event.id}
                         event={event}
                         handleFavorite={handleFavorite}
+                        favoriteLoading={loadingFavorite[event.id] || false}
                       />
                     ))}
                   </div>

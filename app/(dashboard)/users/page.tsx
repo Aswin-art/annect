@@ -23,11 +23,11 @@ import {
   MapPin,
   Tag,
   UserRound,
+  Plus,
 } from "lucide-react";
-import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getUserDashboardData } from "@/actions/userActions";
 import { categories, channels, events, tags, users } from "@prisma/client";
 import Loading from "@/components/Loading";
@@ -114,63 +114,73 @@ export default function Page() {
   const [paymentImage, setPaymentImage] = useState<string | undefined>("");
   const [loading, setLoading] = useState(false);
 
-  const getDashboardData = async () => {
-    const dashboardData = await getUserDashboardData();
-    setDashboard(dashboardData);
-  };
-
-  const toggleFollow = async (channel_id: string) => {
-    setLoading(true);
-    const req = await followChannel(channel_id);
-    if (req) {
-      toast.success("Berhasil!");
-      await getDashboardData();
-    } else {
-      toast.error("Network Error!");
+  const getDashboardData = useCallback(async () => {
+    try {
+      const dashboardData = await getUserDashboardData();
+      setDashboard(dashboardData);
+    } catch (error) {
+      toast.error("Gagal memuat data dashboard");
     }
-    setLoading(false);
-  };
+  }, []);
 
-  const toggleFavorite = async (event_id: string) => {
-    setLoading(true);
-    const req = await addFavorite(event_id);
+  const toggleFollow = useCallback(
+    async (channel_id: string) => {
+      setLoading(true);
+      const req = await followChannel(channel_id);
+      if (req) {
+        toast.success("Berhasil!");
+        await getDashboardData();
+      } else {
+        toast.error("Network Error!");
+      }
+      setLoading(false);
+    },
+    [getDashboardData]
+  );
 
-    if (req) {
-      toast.success("Berhasil!");
-      await getDashboardData();
-    } else {
-      toast.error("Network Error!");
-    }
+  const toggleFavorite = useCallback(
+    async (event_id: string) => {
+      setLoading(true);
+      const req = await addFavorite(event_id);
+      if (req) {
+        toast.success("Berhasil!");
+        await getDashboardData();
+      } else {
+        toast.error("Network Error!");
+      }
+      setLoading(false);
+    },
+    [getDashboardData]
+  );
 
-    setLoading(false);
-  };
+  const handleUpdatePayment = useCallback(
+    async (user_event_id: string, image_url: string) => {
+      const req = await updateUserEvent(user_event_id, image_url, false);
+      if (req) {
+        toast.success("Pembayaran berhasil!");
+        window.location.reload();
+        return;
+      }
+      toast.error("Terjadi kesalahan!");
+    },
+    []
+  );
 
-  const handleUpdatePayment = async (
-    user_event_id: string,
-    image_url: string
-  ) => {
-    const req = await updateUserEvent(user_event_id, image_url, false);
-
-    if (req) {
-      toast.success("Pembayaran berhasil!");
-      window.location.reload();
-      return;
-    }
-
-    toast.error("Terjadi kesalahan!");
-  };
-
-  const handleSubmitPayment = async (user_event_id: string) => {
-    if (paymentImage == "" || !paymentImage) {
-      toast.error("Upload bukti pembayaran!");
-    } else {
-      await handleUpdatePayment(user_event_id, paymentImage);
-    }
-  };
+  const handleSubmitPayment = useCallback(
+    async (user_event_id: string) => {
+      if (!paymentImage) {
+        toast.error("Upload bukti pembayaran!");
+      } else {
+        await handleUpdatePayment(user_event_id, paymentImage);
+      }
+    },
+    [paymentImage, handleUpdatePayment]
+  );
 
   useEffect(() => {
     getDashboardData();
-  }, []);
+  }, [getDashboardData]);
+
   return (
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -198,9 +208,9 @@ export default function Page() {
           </div>
           <div className="mt-5">
             <div className="grid grid-cols-1 gap-5">
-              {dashboard?.user_events?.map((item, index) => (
+              {dashboard?.user_events?.map((item) => (
                 <Card
-                  key={index}
+                  key={item.id}
                   className="hover:-translate-y-3 hover:border-primary transition-all duration-300"
                 >
                   <div className="flex flex-col lg:flex-row gap-4 p-2">
@@ -279,7 +289,7 @@ export default function Page() {
                         />
                       </div>
                       <div className="mt-3 ms-auto flex gap-2">
-                        {item.status == true && (
+                        {item.status === true && (
                           <Link
                             href={item.events.link_group}
                             target="_blank"
@@ -292,13 +302,11 @@ export default function Page() {
                             Bergabung ke grub
                           </Link>
                         )}
-
-                        {item.status == false &&
+                        {item.status === false &&
                           new Date(item.events.event_date) < new Date() && (
                             <Button disabled>Event Selesai</Button>
                           )}
-
-                        {item.status == false &&
+                        {item.status === false &&
                           new Date(item.events.event_date) > new Date() && (
                             <Dialog>
                               <DialogTrigger asChild>
@@ -354,90 +362,95 @@ export default function Page() {
           </div>
           <div className="mt-5">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              {dashboard?.follows?.map((item, index) => (
-                <Card
-                  key={index}
-                  className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
-                >
-                  <CardHeader>
-                    <div className="flex flex-col mb-5 gap-4">
-                      <div className="relative w-full h-[300px]">
-                        <Image
-                          src={item.channels.image || ""}
-                          alt="image"
-                          fill
-                          sizes="100%"
-                          loading="lazy"
-                          className="object-cover w-full h-full rounded"
-                        />
+              <>
+                {dashboard?.follows?.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
+                  >
+                    <CardHeader>
+                      <div className="flex flex-col mb-5 gap-4">
+                        <div className="relative w-full h-[300px]">
+                          <Image
+                            src={item.channels.image || ""}
+                            alt="image"
+                            fill
+                            sizes="100%"
+                            loading="lazy"
+                            className="object-cover w-full h-full rounded"
+                          />
+                        </div>
+                        <div className="flex gap-2 items-center">
+                          <p className="text-xs text-muted-foreground">
+                            Created by{" "}
+                            <span className="text-primary">
+                              {item.channels.users.name}
+                            </span>
+                          </p>
+                          <p className="text-xs text-muted-foreground">|</p>
+                          <p className="text-xs text-muted-foreground">
+                            Tersedia{" "}
+                            <span className="text-primary">
+                              {item.channels._count.events} Event
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex gap-2 items-center">
-                        <p className="text-xs text-muted-foreground">
-                          Created by{" "}
-                          <span className="text-primary">
-                            {item.channels.users.name}
-                          </span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">|</p>
-                        <p className="text-xs text-muted-foreground">
-                          Tersedia{" "}
-                          <span className="text-primary">
-                            {item.channels._count.events} Event
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <CardTitle>
-                      <Link
-                        href={"/channels/" + item.channels.id}
-                        className="hover:text-primary"
-                      >
-                        {item.channels.name}
-                      </Link>
-                    </CardTitle>
-                    <CardDescription className="max-w-lg">
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: item.channels.description
-                            ? item.channels.description.length > 150
-                              ? `${item.channels.description.slice(0, 150)}...`
-                              : item.channels.description
-                            : "",
-                        }}
-                      />
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter>
-                    <div className="flex gap-2 ms-auto">
-                      <Link href={"/channels/" + item.channels.id}>
-                        <Button
-                          variant={"secondary"}
-                          className="hover:text-primary transition-all duration-300"
+                      <CardTitle>
+                        <Link
+                          href={"/channels/" + item.channels.id}
+                          className="hover:text-primary"
                         >
-                          Lihat detail
-                        </Button>
-                      </Link>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant={"ghost"}
-                              disabled={loading}
-                              onClick={() => toggleFollow(item.channels.id)}
-                              className="bg-red-500 text-white"
-                            >
-                              <Heart />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Ikuti Channel</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
+                          {item.channels.name}
+                        </Link>
+                      </CardTitle>
+                      <CardDescription className="max-w-lg">
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: item.channels.description
+                              ? item.channels.description.length > 150
+                                ? `${item.channels.description.slice(
+                                    0,
+                                    150
+                                  )}...`
+                                : item.channels.description
+                              : "",
+                          }}
+                        />
+                      </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                      <div className="flex gap-2 ms-auto">
+                        <Link href={"/channels/" + item.channels.id}>
+                          <Button
+                            variant={"secondary"}
+                            className="hover:text-primary transition-all duration-300"
+                          >
+                            Lihat detail
+                          </Button>
+                        </Link>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={"ghost"}
+                                disabled={loading}
+                                onClick={() => toggleFollow(item.channels.id)}
+                                className="bg-red-500 text-white"
+                              >
+                                <Heart />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Ikuti Channel</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </>
             </div>
           </div>
         </div>
@@ -453,9 +466,9 @@ export default function Page() {
           </div>
           <div className="mt-5">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              {dashboard?.favorites?.map((item, index) => (
+              {dashboard?.favorites?.map((item) => (
                 <Card
-                  key={index}
+                  key={item.id}
                   className="group hover:-translate-y-3 hover:border-primary transition-all duration-300"
                 >
                   <div className="relative w-full h-[300px]">
@@ -513,8 +526,8 @@ export default function Page() {
                         href={"/events/" + item.events.id}
                         className="hover:text-primary"
                       >
-                        {item.events.name && item.events.name?.length > 20
-                          ? item.events.name?.slice(0, 20) + "..."
+                        {item.events.name && item.events.name.length > 20
+                          ? item.events.name.slice(0, 20) + "..."
                           : item.events.name}
                       </Link>
                     </CardTitle>

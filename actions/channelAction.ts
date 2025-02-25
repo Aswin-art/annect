@@ -5,27 +5,67 @@ import { sendChannelCreatedEmail, sendChannelValidatedEmail } from "@/lib/mail";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+const getAllChannels = async (user_id: string | null, name: string = "") => {
+  try {
+    const channels = await db.channels.findMany({
+      where: {
+        name: {
+          contains: name,
+          mode: "insensitive",
+        },
+      },
+      include: {
+        users: {
+          select: {
+            name: true,
+          },
+        },
+        follows: {
+          select: {
+            user_id: true,
+          },
+        },
+        _count: {
+          select: {
+            events: true,
+          },
+        },
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    });
+
+    const formattedChannels = channels.map((channel) => ({
+      ...channel,
+      is_following: channel.follows.some(
+        (follower) => follower.user_id === user_id
+      ),
+    }));
+
+    return formattedChannels;
+  } catch (error) {
+    console.error("Error fetching channels from database:", error);
+    return [];
+  }
+};
+
 export const getAllData = async (name?: string | null) => {
   try {
-    let user = await currentUser();
-    let req;
-    if (name) {
-      req = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/channels?user_id=${user?.id}&name=${name}`
-      );
+    const user = await currentUser();
+    const user_id = user?.id || null;
+
+    let channels;
+    if (name && name.trim().length > 0) {
+      channels = await getAllChannels(user_id, name);
     } else {
-      req = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/channels?user_id=${user?.id}`
-      );
+      channels = await getAllChannels(user_id);
     }
 
-    if (req.ok) {
-      const res = await req.json();
-      return res;
-    }
-  } catch (err) {
-    console.log(err);
-    return null;
+    return channels;
+  } catch (error) {
+    console.error("Error fetching channels:", error);
+    return [];
   }
 };
 

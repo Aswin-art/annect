@@ -18,6 +18,7 @@ const getAllChannels = async (user_id: string | null, name: string = "") => {
         users: {
           select: {
             name: true,
+            email: true,
           },
         },
         follows: {

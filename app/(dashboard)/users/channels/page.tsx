@@ -39,6 +39,7 @@ export default function Page() {
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const getData = async () => {
     const req = await getChannelByUserId();
+    console.log(req);
     setChannels(req);
     setLoading(false);
   };

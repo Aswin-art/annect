@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { sendWelcomeEmail } from "@/lib/mail";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { users_role } from "@prisma/client";
-import { redirect } from "next/navigation";
 
 type UserData = {
   id: string;
